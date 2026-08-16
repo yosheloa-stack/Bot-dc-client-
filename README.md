@@ -200,6 +200,57 @@ src/
 assets/img/ceifador-logo.jpg  Logo do bot (ilustração do Ceifador)
 ```
 
+## Deploy na Square Cloud
+
+O projeto já inclui o arquivo `squarecloud.app` na raiz — é o que a Square
+Cloud lê para saber como rodar a aplicação:
+
+```
+DISPLAY_NAME=Ceifador
+DESCRIPTION=Bot de Discord com saldo e Pix automatico
+MAIN=src/index.js
+MEMORY=512
+VERSION=recommended
+AUTORESTART=true
+SUBDOMAIN=ceifador
+```
+
+- `MAIN=src/index.js` — mesmo entry point usado localmente (`npm start`).
+- `VERSION=recommended` — a Square Cloud usa uma versão recente do
+  Node.js (bem acima do mínimo 22.5 exigido pelo `node:sqlite`), então
+  não precisa fixar uma versão específica.
+- `SUBDOMAIN=ceifador` — gera uma URL pública (`https://ceifador.squareweb.app`)
+  para o painel administrativo e os webhooks do Pix. Troque por um nome
+  disponível; se remover essa linha, o painel/webhook não ficam expostos
+  publicamente (ok se você só quiser os comandos do Discord).
+
+### Passo a passo
+
+1. **Não** inclua `node_modules/`, `.git/`, `data/` nem `.env` no zip —
+   a Square Cloud instala as dependências do zero a partir do
+   `package.json` e o `.env` local não deve viajar dentro do pacote.
+2. Gere o zip do projeto (com o `squarecloud.app` na raiz) e envie pelo
+   [Dashboard da Square Cloud](https://squarecloud.app) ou pela CLI deles.
+3. Na aba **Environment Variables** do app (não no zip), cadastre as
+   mesmas variáveis do `.env.example`: `DISCORD_TOKEN`,
+   `DISCORD_CLIENT_ID`, `PIX_KEY`, `ADMIN_PANEL_PASSWORD`,
+   `SESSION_SECRET`, etc. Se você definiu `SUBDOMAIN`, configure também
+   `PUBLIC_URL=https://ceifador.squareweb.app` (troque pelo subdomínio
+   escolhido) para os links do webhook ficarem corretos.
+4. Se for usar Efí Bank, o certificado `.p12` precisa existir no
+   servidor da Square Cloud — envie-o pelo file explorer do dashboard
+   para um caminho como `certs/efi.p12` e aponte `EFI_CERT_PATH` para
+   esse caminho nas variáveis de ambiente.
+5. Registre os comandos de barra **uma vez, a partir da sua máquina**
+   (não precisa rodar na Square Cloud): `npm run deploy-commands` com o
+   `.env` local preenchido com `DISCORD_TOKEN`/`DISCORD_CLIENT_ID`.
+6. Suba o app pelo dashboard. Com `AUTORESTART=true`, ele reinicia
+   sozinho se cair.
+
+> A Square Cloud injeta a variável `PORT` automaticamente quando
+> `SUBDOMAIN` está configurado; o painel já lê `process.env.PORT`
+> (`src/config/env.js`), então não precisa mexer em nada no código.
+
 ## Segurança
 
 - Nunca commite o arquivo `.env` (já está no `.gitignore`).
