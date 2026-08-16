@@ -84,6 +84,48 @@ function cancelWithdraw(transactionId, actor = null) {
   return transactionRepository.updateStatus(transactionId, 'cancelled', actor);
 }
 
+function reservePasse({ discordId, username, amountCents, playerId }) {
+  const user = userRepository.ensureUser(discordId, username);
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    throw new Error('O preço do passe ainda não foi configurado corretamente.');
+  }
+  if (user.balance_cents < amountCents) {
+    throw new InsufficientBalanceError(`Saldo insuficiente. Você precisa de ${require('../utils/format').centsToBRL(amountCents)}.`);
+  }
+  userRepository.updateBalance(discordId, -amountCents);
+  try {
+    return transactionRepository.createTransaction({
+      discordId,
+      type: 'passe',
+      amountCents,
+      status: 'pending',
+      provider: 'passe_api',
+      providerTxid: playerId,
+      description: `Reserva para envio de Passe Booyah ao ID ${playerId}`,
+    });
+  } catch (err) {
+    userRepository.updateBalance(discordId, amountCents);
+    throw err;
+  }
+}
+
+function completePasse(transactionId, actor = null) {
+  const tx = transactionRepository.getTransaction(transactionId);
+  if (!tx) throw new Error('Venda de passe não encontrada.');
+  if (tx.type !== 'passe') throw new Error('Transação não é uma venda de passe.');
+  if (tx.status !== 'pending') return tx;
+  return transactionRepository.updateStatus(transactionId, 'completed', actor);
+}
+
+function cancelPasse(transactionId, actor = null) {
+  const tx = transactionRepository.getTransaction(transactionId);
+  if (!tx) throw new Error('Venda de passe não encontrada.');
+  if (tx.type !== 'passe') throw new Error('Transação não é uma venda de passe.');
+  if (tx.status !== 'pending') return tx;
+  userRepository.updateBalance(tx.discord_id, tx.amount_cents);
+  return transactionRepository.updateStatus(transactionId, 'cancelled', actor);
+}
+
 function adminAdjust({ discordId, username, amountCents, actor, description = null }) {
   const user = userRepository.ensureUser(discordId, username);
   if (amountCents < 0 && user.balance_cents < Math.abs(amountCents)) {
@@ -110,6 +152,9 @@ module.exports = {
   completeDeposit,
   failDeposit,
   requestWithdraw,
+  reservePasse,
+  completePasse,
+  cancelPasse,
   completeWithdraw,
   cancelWithdraw,
   adminAdjust,
