@@ -63,7 +63,8 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                   { name: 'Manual (chave Pix estática)', value: 'manual' },
-                  { name: 'Mercado Pago (automático)', value: 'mercadopago' }
+                  { name: 'Mercado Pago (automático)', value: 'mercadopago' },
+                  { name: 'Efí Bank (automático)', value: 'efi' }
                 )
             )
         )
@@ -176,6 +177,14 @@ async function handlePix(interaction, sub, config) {
         { name: 'Provedor', value: config.pix.provider, inline: true },
         { name: 'Chave Pix', value: maskKey(config.pix.key), inline: true },
         { name: 'Mercado Pago', value: config.pix.mercadoPago.accessToken ? 'Token configurado ✅' : 'Token não configurado ❌', inline: true },
+        {
+          name: 'Efí Bank',
+          value:
+            config.pix.efi.clientId && config.pix.efi.certPath
+              ? `Configurada ✅ (${config.pix.efi.sandbox ? 'sandbox' : 'produção'})`
+              : 'Não configurada ❌',
+          inline: true,
+        },
         { name: 'Depósito mínimo', value: centsToBRL(config.pix.minDepositCents), inline: true },
         { name: 'Depósito máximo', value: centsToBRL(config.pix.maxDepositCents), inline: true }
       );

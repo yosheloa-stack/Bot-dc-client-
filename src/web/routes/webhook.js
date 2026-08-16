@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { getConfig } = require('../../config/env');
-const { getPixProvider, MercadoPagoProvider } = require('../../services/pix');
+const { getPixProvider, MercadoPagoProvider, EfiProvider } = require('../../services/pix');
 const transactionRepository = require('../../repositories/transactionRepository');
 const balanceService = require('../../services/balanceService');
 const { notifyDepositCompleted } = require('../../discord/notifier');
@@ -61,6 +61,45 @@ router.post('/webhook/mercadopago', express.json(), async (req, res) => {
     }
   } catch (err) {
     console.error('[webhook] Erro ao processar notificação do Mercado Pago:', err);
+  }
+
+  res.status(200).send('ok');
+});
+
+router.get('/webhook/efi', (req, res) => {
+  res.status(200).send('Ceifador Pix webhook (Efí) ativo');
+});
+
+router.post('/webhook/efi', express.json(), async (req, res) => {
+  const config = getConfig();
+  const provider = getPixProvider(config);
+
+  if (!(provider instanceof EfiProvider)) {
+    return res.status(200).send('ignored');
+  }
+
+  const items = Array.isArray(req.body?.pix) ? req.body.pix : [];
+
+  for (const item of items) {
+    const txid = item?.txid;
+    if (!txid) continue;
+
+    try {
+      const tx = transactionRepository.getTransactionByProviderTxid('efi', String(txid));
+      if (!tx || tx.status !== 'pending') continue;
+
+      // O corpo do webhook não é confiado diretamente: o status é
+      // reconsultado de forma autenticada antes de liberar o saldo.
+      const status = await provider.fetchStatus(txid);
+      if (status.status === 'completed') {
+        const updated = balanceService.completeDeposit(tx.id);
+        await notifyDepositCompleted(updated.discord_id, updated);
+      } else if (status.status === 'failed') {
+        balanceService.failDeposit(tx.id);
+      }
+    } catch (err) {
+      console.error(`[webhook] Erro ao processar notificação da Efí (txid ${txid}):`, err);
+    }
   }
 
   res.status(200).send('ok');

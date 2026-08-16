@@ -5,3 +5,10 @@ data/
 *.log
 npm-debug.log*
 .DS_Store
+
+# Certificados de mTLS (ex: Efí Bank) — nunca versionar
+certs/
+*.p12
+*.pfx
+*.pem
+*.key

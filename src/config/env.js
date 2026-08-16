@@ -39,6 +39,13 @@ function getConfig() {
       mercadoPago: {
         accessToken: db.mp_access_token || process.env.MP_ACCESS_TOKEN || '',
       },
+      efi: {
+        clientId: db.efi_client_id || process.env.EFI_CLIENT_ID || '',
+        clientSecret: db.efi_client_secret || process.env.EFI_CLIENT_SECRET || '',
+        certPath: db.efi_cert_path || process.env.EFI_CERT_PATH || '',
+        certPassphrase: db.efi_cert_passphrase || process.env.EFI_CERT_PASSPHRASE || '',
+        sandbox: bool(db.efi_sandbox ?? process.env.EFI_SANDBOX, false),
+      },
     },
     currency: process.env.CURRENCY || 'BRL',
   };

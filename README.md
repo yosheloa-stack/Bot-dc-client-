@@ -127,6 +127,34 @@ próprio painel administrativo do Ceifador mostra a URL correta em
 > acessível publicamente (ex: seu domínio com HTTPS, ou um túnel como
 > `ngrok`/`cloudflared` durante testes).
 
+### Efí Bank (100% automático)
+
+Defina `PIX_PROVIDER=efi` e informe `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`
+(Efí > Minhas Aplicações). **Diferente do Mercado Pago, a API Pix da Efí
+exige mTLS em toda chamada**: baixe o certificado `.p12` no painel da Efí,
+salve-o em um caminho no servidor onde o bot roda (fora do repositório —
+por exemplo `certs/efi.p12`, que já está no `.gitignore`) e aponte
+`EFI_CERT_PATH` para esse arquivo. Se o certificado tiver senha, informe
+em `EFI_CERT_PASSPHRASE`.
+
+Depois de salvar a chave Pix e as credenciais (pelo `.env` ou pelo painel,
+em *Configurações*), registre o webhook uma única vez clicando em
+**"Registrar webhook na Efí"** na mesma página — isso associa
+`PUBLIC_URL/webhook/efi` à sua chave Pix na Efí. A partir daí, toda
+cobrança criada por `/depositar` é confirmada automaticamente: o bot
+recebe a notificação, reconsulta o status diretamente na API da Efí (o
+corpo do webhook nunca é confiado sozinho) e libera o saldo.
+
+Use `EFI_SANDBOX=true` para testar no ambiente de homologação da Efí
+antes de ir para produção.
+
+> **Segurança**: nunca cole Client ID/Secret ou o conteúdo do
+> certificado em locais versionados pelo git — use apenas o `.env`
+> (já ignorado) ou o painel administrativo, que grava tudo no SQLite
+> local (pasta `data/`, também ignorada). Se alguma credencial chegou a
+> ser exposta (ex: colada em um chat), gere novas no painel da Efí antes
+> de colocar o bot em produção.
+
 ### Retiradas (saques)
 
 Não existe uma API genérica de "Pix automático de saída" sem que o bot
@@ -145,9 +173,10 @@ Acesse `PUBLIC_URL` (ou `http://localhost:PORT`) e faça login com
 - **Usuários**: busca e ajuste manual de saldo.
 - **Transações**: histórico completo, com filtros por status/tipo e ações
   para confirmar/cancelar depósitos e retiradas pendentes.
-- **Configurações**: chave Pix, provedor, credenciais do Mercado Pago,
-  limites de depósito, cargo de admin e canal de log — tudo aplicado
-  imediatamente, sem reiniciar o bot.
+- **Configurações**: chave Pix, provedor (manual, Mercado Pago ou Efí),
+  credenciais e certificado da Efí, token do Mercado Pago, limites de
+  depósito, cargo de admin e canal de log — tudo aplicado imediatamente,
+  sem reiniciar o bot.
 
 ## Estrutura do projeto
 
@@ -158,7 +187,7 @@ src/
   repositories/            Acesso a dados (usuários, transações, configurações)
   services/
     balanceService.js      Regras de saldo (depósito, retirada, ajustes)
-    pix/                   Provedores de Pix (manual, Mercado Pago)
+    pix/                   Provedores de Pix (manual, Mercado Pago, Efí)
   discord/
     client.js               Bootstrap do client discord.js
     commands/                Comandos de barra

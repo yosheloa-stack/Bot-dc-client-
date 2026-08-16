@@ -4,6 +4,7 @@
 <p class="subtitle">Chave Pix, provedor e credenciais.</p>
 
 <% if (saved) { %><div class="alert alert-success">Configurações salvas com sucesso.</div><% } %>
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
 
 <form method="POST" action="/config" class="card">
   <h2>Pix</h2>
@@ -13,6 +14,7 @@
       <select name="pix_provider">
         <option value="manual" <%= config.pix.provider === 'manual' ? 'selected' : '' %>>Manual (chave Pix estática)</option>
         <option value="mercadopago" <%= config.pix.provider === 'mercadopago' ? 'selected' : '' %>>Mercado Pago (automático)</option>
+        <option value="efi" <%= config.pix.provider === 'efi' ? 'selected' : '' %>>Efí Bank (automático)</option>
       </select>
     </div>
     <div class="field">
@@ -46,6 +48,36 @@
     </div>
   </div>
 
+  <h2>Efí Bank</h2>
+  <div class="form-grid">
+    <div class="field">
+      <label>Client ID</label>
+      <input type="text" name="efi_client_id" value="<%= config.pix.efi.clientId %>" placeholder="Client_Id_...">
+    </div>
+    <div class="field">
+      <label>Client Secret</label>
+      <input type="password" name="efi_client_secret" placeholder="<%= config.pix.efi.clientSecret ? '•••••••••••• (configurado)' : 'Client_Secret_...' %>">
+      <small>Deixe em branco para manter o valor atual.</small>
+    </div>
+    <div class="field">
+      <label>Caminho do certificado (.p12)</label>
+      <input type="text" name="efi_cert_path" value="<%= config.pix.efi.certPath %>" placeholder="/caminho/no/servidor/certificado.p12">
+      <small>Arquivo baixado no painel da Efí. Precisa existir no servidor onde o bot roda.</small>
+    </div>
+    <div class="field">
+      <label>Senha do certificado</label>
+      <input type="password" name="efi_cert_passphrase" placeholder="<%= config.pix.efi.certPassphrase ? '•••••••••••• (configurada)' : 'deixe em branco se não houver' %>">
+      <small>Deixe em branco para manter o valor atual.</small>
+    </div>
+    <div class="field">
+      <label>Ambiente</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);">
+        <input type="checkbox" name="efi_sandbox" style="width:auto;" <%= config.pix.efi.sandbox ? 'checked' : '' %>>
+        Usar sandbox (homologação)
+      </label>
+    </div>
+  </div>
+
   <h2>Discord</h2>
   <div class="form-grid">
     <div class="field">
@@ -65,6 +97,18 @@
   <h2>Webhook do Mercado Pago</h2>
   <p class="subtitle">Configure esta URL de notificação no seu aplicativo Mercado Pago para liberação automática do saldo:</p>
   <p class="mono"><%= config.web.publicUrl %>/webhook/mercadopago</p>
+</div>
+
+<div class="card">
+  <h2>Webhook da Efí</h2>
+  <p class="subtitle">URL de notificação registrada para a chave Pix configurada:</p>
+  <p class="mono"><%= config.web.publicUrl %>/webhook/efi</p>
+  <form method="POST" action="/config/efi/webhook">
+    <button type="submit" class="btn btn-outline">Registrar webhook na Efí</button>
+  </form>
+  <p class="subtitle" style="margin-top:12px;margin-bottom:0;">
+    Salve o Client ID/Secret, o caminho do certificado e a chave Pix acima antes de registrar.
+  </p>
 </div>
 
 <%- include('partials/footer') %>
