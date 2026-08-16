@@ -23,19 +23,19 @@ const EMOJI = {
   chart: '📜',
 };
 
-const LOGO_PATH = path.join(__dirname, '..', '..', '..', 'assets', 'img', 'ceifador-logo.png');
+const LOGO_PATH = path.join(__dirname, '..', '..', '..', 'assets', 'img', 'ceifador-logo.jpg');
 
 function logoAttachment() {
-  return new AttachmentBuilder(LOGO_PATH, { name: 'ceifador-logo.png' });
+  return new AttachmentBuilder(LOGO_PATH, { name: 'ceifador-logo.jpg' });
 }
 
 function baseEmbed({ color = COLORS.primary, withThumbnail = true } = {}) {
   const embed = new EmbedBuilder()
     .setColor(color)
-    .setFooter({ text: '🗡️ CEIFADOR • Sistema de Pagamentos', iconURL: withThumbnail ? 'attachment://ceifador-logo.png' : undefined })
+    .setFooter({ text: '🗡️ CEIFADOR • Sistema de Pagamentos', iconURL: withThumbnail ? 'attachment://ceifador-logo.jpg' : undefined })
     .setTimestamp();
   if (withThumbnail) {
-    embed.setThumbnail('attachment://ceifador-logo.png');
+    embed.setThumbnail('attachment://ceifador-logo.jpg');
   }
   return embed;
 }

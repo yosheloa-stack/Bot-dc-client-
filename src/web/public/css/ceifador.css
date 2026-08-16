@@ -60,6 +60,8 @@ a:hover {
   height: 32px;
   border-radius: 50%;
   border: 1px solid var(--red);
+  object-fit: cover;
+  object-position: top center;
 }
 
 .nav-links {
@@ -314,9 +316,13 @@ textarea:focus {
   box-shadow: 0 0 60px rgba(179, 0, 0, 0.15);
 }
 .login-card img {
-  width: 72px;
-  height: 72px;
+  width: 88px;
+  height: 88px;
   margin-bottom: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--red);
+  object-fit: cover;
+  object-position: top center;
 }
 .login-card h1 {
   font-size: 22px;

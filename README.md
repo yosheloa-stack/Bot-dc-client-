@@ -197,7 +197,7 @@ src/
   web/
     server.js                App Express (painel + webhook)
     routes/, views/, public/ Rotas, telas EJS e assets estáticos
-assets/img/ceifador-logo.png Logo gerado (foice estilizada, tema Ceifador)
+assets/img/ceifador-logo.jpg  Logo do bot (ilustração do Ceifador)
 ```
 
 ## Segurança
