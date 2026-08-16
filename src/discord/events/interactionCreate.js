@@ -2,7 +2,7 @@
 
 const { Events } = require('discord.js');
 const { baseEmbed, logoAttachment, EMOJI, COLORS } = require('../embeds/theme');
-const passeService = require('../services/passeService');
+const passeService = require('../../services/passeService');
 const balanceService = require('../../services/balanceService');
 const { getConfig } = require('../../config/env');
 
