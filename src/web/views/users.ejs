@@ -1,0 +1,46 @@
+<%- include('partials/header', { activePage }) %>
+
+<h1>👥 Usuários</h1>
+<p class="subtitle">Consulte e ajuste o saldo de qualquer usuário.</p>
+
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+<form method="GET" action="/users" class="filters">
+  <input type="text" name="q" placeholder="Buscar por ID ou nome" value="<%= q %>">
+  <button type="submit" class="btn btn-outline">Buscar</button>
+</form>
+
+<div class="card">
+  <% if (users.length === 0) { %>
+    <p class="empty">Nenhum usuário encontrado.</p>
+  <% } else { %>
+  <table>
+    <thead><tr><th>Discord ID</th><th>Usuário</th><th>Saldo</th><th>Desde</th><th>Ajustar saldo</th></tr></thead>
+    <tbody>
+      <% users.forEach((u) => { %>
+      <tr>
+        <td class="mono"><%= u.discord_id %></td>
+        <td><%= u.username %></td>
+        <td><%= centsToBRL(u.balance_cents) %></td>
+        <td><%= formatDate(u.created_at) %></td>
+        <td>
+          <form method="POST" action="/users/<%= u.discord_id %>/adjust" class="inline">
+            <input type="hidden" name="tipo" value="adicionar">
+            <input type="number" step="0.01" min="0.01" name="valor" placeholder="R$" class="qty-input" required>
+            <input type="text" name="motivo" placeholder="motivo" class="text-input-sm">
+            <button type="submit" class="btn btn-sm btn-success">+ Add</button>
+          </form>
+          <form method="POST" action="/users/<%= u.discord_id %>/adjust" class="inline">
+            <input type="hidden" name="tipo" value="remover">
+            <input type="number" step="0.01" min="0.01" name="valor" placeholder="R$" class="qty-input" required>
+            <button type="submit" class="btn btn-sm btn-danger">− Rem</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

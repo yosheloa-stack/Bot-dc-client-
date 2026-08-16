@@ -1,0 +1,70 @@
+<%- include('partials/header', { activePage }) %>
+
+<h1>⚙ Configurações</h1>
+<p class="subtitle">Chave Pix, provedor e credenciais.</p>
+
+<% if (saved) { %><div class="alert alert-success">Configurações salvas com sucesso.</div><% } %>
+
+<form method="POST" action="/config" class="card">
+  <h2>Pix</h2>
+  <div class="form-grid">
+    <div class="field">
+      <label>Provedor</label>
+      <select name="pix_provider">
+        <option value="manual" <%= config.pix.provider === 'manual' ? 'selected' : '' %>>Manual (chave Pix estática)</option>
+        <option value="mercadopago" <%= config.pix.provider === 'mercadopago' ? 'selected' : '' %>>Mercado Pago (automático)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Chave Pix</label>
+      <input type="text" name="pix_key" value="<%= config.pix.key %>" placeholder="e-mail, CPF, telefone ou aleatória">
+    </div>
+    <div class="field">
+      <label>Nome do beneficiário</label>
+      <input type="text" name="pix_merchant_name" value="<%= config.pix.merchantName %>">
+    </div>
+    <div class="field">
+      <label>Cidade do beneficiário</label>
+      <input type="text" name="pix_merchant_city" value="<%= config.pix.merchantCity %>">
+    </div>
+    <div class="field">
+      <label>Depósito mínimo (R$)</label>
+      <input type="number" step="0.01" min="0.01" name="pix_min_deposit" value="<%= (config.pix.minDepositCents / 100).toFixed(2) %>">
+    </div>
+    <div class="field">
+      <label>Depósito máximo (R$)</label>
+      <input type="number" step="0.01" min="0.01" name="pix_max_deposit" value="<%= (config.pix.maxDepositCents / 100).toFixed(2) %>">
+    </div>
+  </div>
+
+  <h2>Mercado Pago</h2>
+  <div class="form-grid">
+    <div class="field">
+      <label>Access Token</label>
+      <input type="password" name="mp_access_token" placeholder="<%= config.pix.mercadoPago.accessToken ? '•••••••••••• (configurado)' : 'APP_USR-...' %>">
+      <small>Deixe em branco para manter o token atual. Necessário apenas se o provedor for Mercado Pago.</small>
+    </div>
+  </div>
+
+  <h2>Discord</h2>
+  <div class="form-grid">
+    <div class="field">
+      <label>Cargo de administrador (ID)</label>
+      <input type="text" name="admin_role_id" value="<%= config.discord.adminRoleId %>" placeholder="ID do cargo com acesso a /admin">
+    </div>
+    <div class="field">
+      <label>Canal de log (ID)</label>
+      <input type="text" name="log_channel_id" value="<%= config.discord.logChannelId %>" placeholder="ID do canal para avisos de retirada">
+    </div>
+  </div>
+
+  <button type="submit" class="btn">Salvar configurações</button>
+</form>
+
+<div class="card">
+  <h2>Webhook do Mercado Pago</h2>
+  <p class="subtitle">Configure esta URL de notificação no seu aplicativo Mercado Pago para liberação automática do saldo:</p>
+  <p class="mono"><%= config.web.publicUrl %>/webhook/mercadopago</p>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,48 @@
+<%- include('partials/header', { activePage }) %>
+
+<h1>🗡️ Painel do Ceifador</h1>
+<p class="subtitle">Visão geral do sistema de saldo e Pix.</p>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Usuários</div><div class="value"><%= stats.totalUsers %></div></div>
+  <div class="stat-card"><div class="label">Saldo em circulação</div><div class="value"><%= centsToBRL(stats.totalBalanceCents) %></div></div>
+  <div class="stat-card"><div class="label">Depósitos pendentes</div><div class="value"><%= stats.pendingDeposits %></div></div>
+  <div class="stat-card"><div class="label">Retiradas pendentes</div><div class="value"><%= stats.pendingWithdraws %></div></div>
+  <div class="stat-card"><div class="label">Total depositado</div><div class="value"><%= centsToBRL(stats.totalDepositedCents) %></div></div>
+  <div class="stat-card"><div class="label">Total retirado</div><div class="value"><%= centsToBRL(stats.totalWithdrawnCents) %></div></div>
+</div>
+
+<div class="card">
+  <h2>Provedor Pix ativo: <%= config.pix.provider %></h2>
+  <p class="subtitle" style="margin-bottom:0;">
+    <% if (config.pix.provider === 'mercadopago') { %>
+      Confirmação automática via webhook do Mercado Pago.
+    <% } else { %>
+      Confirmação manual — acompanhe em <a href="/transactions?status=pending&type=deposit">Transações</a>.
+    <% } %>
+  </p>
+</div>
+
+<div class="card">
+  <h2>Últimas transações</h2>
+  <% if (recent.length === 0) { %>
+    <p class="empty">Nenhuma transação ainda.</p>
+  <% } else { %>
+  <table>
+    <thead><tr><th>Usuário</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>
+      <% recent.forEach((tx) => { %>
+      <tr>
+        <td class="mono"><%= tx.discord_id %></td>
+        <td><%= typeLabel(tx.type) %></td>
+        <td><%= centsToBRL(tx.amount_cents) %></td>
+        <td><span class="badge badge-<%= tx.status %>"><%= statusLabel(tx.status) %></span></td>
+        <td><%= formatDate(tx.created_at) %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

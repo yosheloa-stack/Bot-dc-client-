@@ -1,0 +1,35 @@
+{
+  "name": "bot-dc-client-",
+  "version": "1.0.0",
+  "description": "Bot de Discord estilo Ceifador para venda de saldo com Pix automatico",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "deploy-commands": "node src/discord/deployCommands.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yosheloa-stack/Bot-dc-client-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yosheloa-stack/Bot-dc-client-/issues"
+  },
+  "homepage": "https://github.com/yosheloa-stack/Bot-dc-client-#readme",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "pix-utils": "^2.8.2",
+    "qrcode": "^1.5.4"
+  }
+}

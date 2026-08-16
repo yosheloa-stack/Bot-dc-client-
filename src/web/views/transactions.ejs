@@ -1,0 +1,76 @@
+<%- include('partials/header', { activePage }) %>
+
+<h1>📜 Transações</h1>
+<p class="subtitle">Depósitos, retiradas e ajustes administrativos.</p>
+
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+<form method="GET" action="/transactions" class="filters">
+  <select name="status" onchange="this.form.submit()">
+    <option value="">Todos os status</option>
+    <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pendente</option>
+    <option value="completed" <%= status === 'completed' ? 'selected' : '' %>>Concluído</option>
+    <option value="failed" <%= status === 'failed' ? 'selected' : '' %>>Falhou</option>
+    <option value="cancelled" <%= status === 'cancelled' ? 'selected' : '' %>>Cancelado</option>
+  </select>
+  <select name="type" onchange="this.form.submit()">
+    <option value="">Todos os tipos</option>
+    <option value="deposit" <%= type === 'deposit' ? 'selected' : '' %>>Depósito</option>
+    <option value="withdraw" <%= type === 'withdraw' ? 'selected' : '' %>>Retirada</option>
+    <option value="admin_credit" <%= type === 'admin_credit' ? 'selected' : '' %>>Ajuste (crédito)</option>
+    <option value="admin_debit" <%= type === 'admin_debit' ? 'selected' : '' %>>Ajuste (débito)</option>
+  </select>
+</form>
+
+<div class="card">
+  <% if (transactions.length === 0) { %>
+    <p class="empty">Nenhuma transação encontrada.</p>
+  <% } else { %>
+  <table>
+    <thead><tr><th>ID</th><th>Usuário</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+    <tbody>
+      <% transactions.forEach((tx) => { %>
+      <tr>
+        <td class="mono" title="<%= tx.id %>"><%= tx.id.slice(0, 8) %></td>
+        <td class="mono"><%= tx.discord_id %></td>
+        <td><%= typeLabel(tx.type) %></td>
+        <td><%= centsToBRL(tx.amount_cents) %></td>
+        <td><span class="badge badge-<%= tx.status %>"><%= statusLabel(tx.status) %></span></td>
+        <td><%= formatDate(tx.created_at) %></td>
+        <td>
+          <% if (tx.type === 'withdraw' && tx.status === 'pending') { %>
+            <form method="POST" action="/transactions/<%= tx.id %>/complete-withdraw" class="inline">
+              <button type="submit" class="btn btn-sm btn-success">Concluir</button>
+            </form>
+            <form method="POST" action="/transactions/<%= tx.id %>/cancel-withdraw" class="inline">
+              <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+            </form>
+          <% } else if (tx.type === 'deposit' && tx.status === 'pending') { %>
+            <form method="POST" action="/transactions/<%= tx.id %>/complete-deposit" class="inline">
+              <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
+            </form>
+            <form method="POST" action="/transactions/<%= tx.id %>/fail-deposit" class="inline">
+              <button type="submit" class="btn btn-sm btn-danger">Falhou</button>
+            </form>
+            <% if (tx.provider === 'mercadopago') { %>
+            <form method="POST" action="/transactions/<%= tx.id %>/refresh" class="inline">
+              <button type="submit" class="btn btn-sm btn-outline">Consultar</button>
+            </form>
+            <% } %>
+          <% } else { %>
+            <span class="mono">—</span>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <div class="pagination">
+    <% if (page > 1) { %><a class="btn btn-outline btn-sm" href="?status=<%= status || '' %>&type=<%= type || '' %>&page=<%= page - 1 %>">← Anterior</a><% } %>
+    <span class="mono">Página <%= page %> de <%= totalPages %></span>
+    <% if (page < totalPages) { %><a class="btn btn-outline btn-sm" href="?status=<%= status || '' %>&type=<%= type || '' %>&page=<%= page + 1 %>">Próxima →</a><% } %>
+  </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

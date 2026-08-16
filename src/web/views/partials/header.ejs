@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ceifador • Painel Administrativo</title>
+<link rel="icon" href="/img/ceifador-logo.png">
+<link rel="stylesheet" href="/css/ceifador.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="brand"><img src="/img/ceifador-logo.png" alt="Ceifador"> CEIFADOR</div>
+  <div class="nav-links">
+    <a href="/" class="<%= activePage === 'dashboard' ? 'active' : '' %>">Painel</a>
+    <a href="/users" class="<%= activePage === 'users' ? 'active' : '' %>">Usuários</a>
+    <a href="/transactions" class="<%= activePage === 'transactions' ? 'active' : '' %>">Transações</a>
+    <a href="/config" class="<%= activePage === 'config' ? 'active' : '' %>">Configurações</a>
+  </div>
+  <form class="logout-form" method="POST" action="/logout">
+    <button type="submit">Sair</button>
+  </form>
+</nav>
+<div class="container">
