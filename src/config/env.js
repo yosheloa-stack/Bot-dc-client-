@@ -17,7 +17,6 @@ function getConfig() {
     discord: {
       token: process.env.DISCORD_TOKEN || '',
       clientId: process.env.DISCORD_CLIENT_ID || '',
-      guildId: process.env.DISCORD_GUILD_ID || '',
       adminRoleId: db.admin_role_id || process.env.ADMIN_ROLE_ID || '',
       logChannelId: db.log_channel_id || process.env.ADMIN_LOG_CHANNEL_ID || '',
     },

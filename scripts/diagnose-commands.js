@@ -27,5 +27,4 @@ console.log(JSON.stringify({
   commandCount: commands.length,
   commandNames: names,
   requiredEnv: ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'],
-  guildRegistration: Boolean(process.env.DISCORD_GUILD_ID),
 }, null, 2));

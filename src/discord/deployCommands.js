@@ -29,15 +29,11 @@ async function deployCommands(config) {
   }
   const rest = new REST().setToken(config.discord.token);
 
-  const route = config.discord.guildId
-    ? Routes.applicationGuildCommands(config.discord.clientId, config.discord.guildId)
-    : Routes.applicationCommands(config.discord.clientId);
-
-  const data = await rest.put(route, { body: commands });
+  const data = await rest.put(Routes.applicationCommands(config.discord.clientId), { body: commands });
   return {
     count: data.length,
     names: data.map((command) => command.name),
-    scope: config.discord.guildId ? `servidor ${config.discord.guildId}` : 'global',
+    scope: 'global',
   };
 }
 

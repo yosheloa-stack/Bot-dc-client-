@@ -53,11 +53,8 @@ Preencha o `.env`:
 
 1. `DISCORD_TOKEN` e `DISCORD_CLIENT_ID` — na página da sua aplicação no
    Discord Developer Portal.
-2. `DISCORD_GUILD_ID` — ID do seu servidor de testes (para os comandos
-   aparecerem instantaneamente durante o desenvolvimento). Remova antes de
-   publicar globalmente.
-3. `PIX_KEY` — sua chave Pix, usada no modo manual.
-4. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
+2. `PIX_KEY` — sua chave Pix, usada no modo manual.
+3. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
    — apenas se for usar Pix automático (ver [Modos de Pix](#modos-de-pix)).
 
 ### Intents privilegiadas
@@ -84,19 +81,15 @@ npm start
 
 **Os comandos de barra são registrados automaticamente toda vez que o
 bot inicia** — não é preciso rodar nada separado, nem na Square Cloud
-nem em qualquer outro host. Se definir `DISCORD_GUILD_ID`, o registro é
-instantâneo nesse servidor; sem ele, o registro é global e o Discord
-pode levar até 1 hora para propagar os comandos em todos os servidores
-na primeira vez.
+nem em qualquer outro host. O registro é sempre global; o Discord pode levar
+algum tempo para propagar os comandos na primeira publicação.
 
 ### Quando o bot está online, mas os comandos não aparecem
 
-Confirme que `DISCORD_CLIENT_ID` é o Application ID correto e que
-`DISCORD_GUILD_ID`, quando preenchido, é o ID do servidor correto. Para
-desenvolvimento, mantenha `DISCORD_GUILD_ID` preenchido, porque os comandos
-de servidor aparecem imediatamente; sem ele, a publicação global pode
-demorar. Se o bot foi instalado antes da configuração atual do Discord,
-refaça o convite pelo Developer Portal. O bot agora só fica conectado depois
+Confirme que `DISCORD_CLIENT_ID` é o Application ID correto. Os comandos
+são publicados globalmente, sem configuração de servidor de teste. Se o bot
+foi instalado antes da configuração atual do Discord, refaça o convite pelo
+Developer Portal. O bot só fica conectado depois
 que o registro dos comandos termina com sucesso e informa no log os nomes
 registrados. Os comandos deste projeto são comandos de barra: escrever
 `/saldo`, `/depositar`, `/historico`, `/sacar` ou `/admin` no campo de mensagem
