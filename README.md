@@ -1,36 +1,25 @@
-# 🗡️ Ceifador — Bot de Discord com Saldo, Pix, Moderação e Música
+# 🗡️ Ceifador — Bot de Discord com Saldo e Pix Automático
 
-Bot de Discord com identidade visual dark (preto/cinza + vermelho sangue):
-sistema de saldo com Pix automático, moderação automática de servidor
-(anti-link, anti-spam, anti-NSFW, avisos), player de música e um painel
-administrativo web para configurar tudo isso.
+Bot de Discord com identidade visual dark (preto/cinza + vermelho sangue),
+sistema de saldo com histórico de transações, cobrança Pix automática (QR
+Code + Copia e Cola) e painel administrativo web para configurar a chave
+Pix, acompanhar pagamentos e gerenciar usuários.
 
 ## Funcionalidades
 
 - **Saldo automático**: consulta (`/saldo`), depósito via Pix (`/depositar`),
   retirada (`/sacar`) e histórico de transações (`/historico`).
 - **Pix automático**: gera QR Code e Copia e Cola sob demanda. Com o
-  provedor Mercado Pago ou Efí Bank, o saldo é liberado automaticamente
-  assim que o pagamento é identificado (via webhook). Com o provedor
-  manual, o Pix é gerado a partir da sua própria chave e a confirmação é
-  feita pelo administrador no painel.
-- **Moderação automática**: Anti-Link, Anti-Spam, Anti-NSFW (com detecção
-  real de imagem/vídeo via Sightengine, opcional) e sistema de avisos com
-  escalonamento de punição — tudo configurável por `/admin moderacao` e
-  com log das ações num canal do servidor.
-- **`/setup`**: provisiona cargos, categorias e canais do zero (ou
-  reconfigura os que já existem), de forma idempotente.
-- **Música**: toca do YouTube por nome, link ou playlist, com um painel de
-  botões (pause, skip, back, volume, loop, shuffle, autoplay, stop).
-- **`/painel`**: um painel de botões e formulários para usar o bot inteiro
-  sem digitar slash commands.
+  provedor Mercado Pago, o saldo é liberado automaticamente assim que o
+  pagamento é identificado (via webhook). Com o provedor manual, o Pix é
+  gerado a partir da sua própria chave e a confirmação é feita pelo
+  administrador no painel.
 - **Painel administrativo web**: login protegido, configuração da chave
-  Pix e do provedor, credenciais do Mercado Pago/Efí, cargo de
-  administrador do Discord, listagem de usuários/saldos, histórico
-  completo de pagamentos e gerenciamento de depósitos/retiradas pendentes.
+  Pix e do provedor, credenciais do Mercado Pago, cargo de administrador
+  do Discord, listagem de usuários/saldos, histórico completo de
+  pagamentos e gerenciamento de depósitos/retiradas pendentes.
 - **Identidade visual "Ceifador"**: embeds do Discord e painel web em tema
-  escuro com detalhes em vermelho sangue e uma ilustração do Ceifador
-  como logo.
+  escuro com detalhes em vermelho sangue e uma foice estilizada como logo.
 
 ## Stack técnica
 
@@ -41,13 +30,7 @@ administrativo web para configurar tudo isso.
   dependências nativas para instalar.
 - [`pix-utils`](https://www.npmjs.com/package/pix-utils) para gerar o Pix
   estático (Copia e Cola + QR Code) no modo manual.
-- API REST do Mercado Pago e da Efí Bank para os modos automáticos.
-- [`@discordjs/voice`](https://github.com/discordjs/voice) +
-  [`play-dl`](https://www.npmjs.com/package/play-dl) +
-  [`youtube-sr`](https://www.npmjs.com/package/youtube-sr) para música
-  (com `opusscript`, sem dependências nativas para compilar).
-- [Sightengine](https://sightengine.com/) (opcional) para detecção real de
-  NSFW em imagens/vídeos.
+- API REST do Mercado Pago para o modo automático.
 
 ## Pré-requisitos
 
@@ -76,29 +59,13 @@ Preencha o `.env`:
 4. `PIX_KEY` — sua chave Pix, usada no modo manual.
 5. `MP_ACCESS_TOKEN` — apenas se for usar `PIX_PROVIDER=mercadopago`.
 
-### Intents privilegiadas (obrigatório para moderação e música)
-
-A moderação automática precisa ler o conteúdo das mensagens e a lista de
-membros do servidor — isso exige **intents privilegiadas**, que o Discord
-mantém desligadas por padrão. Sem isso o bot falha ao conectar. No
-[Discord Developer Portal](https://discord.com/developers/applications),
-na aba **Bot**, ative:
-
-- **Message Content Intent**
-- **Server Members Intent**
-
-(Presence Intent não é usado, pode deixar desligado.)
-
 ### Convite do bot
 
-Ao gerar o link de convite (Developer Portal → OAuth2 → URL Generator),
-marque os escopos `bot` e `applications.commands`, e conceda as
-permissões: `Send Messages`, `Embed Links`, `Attach Files`,
-`Use Slash Commands`, `Manage Roles`, `Manage Channels`,
-`Manage Messages`, `Kick Members`, `Ban Members`, `Moderate Members`,
-`Mention Everyone`, `Connect` e `Speak` (as três últimas são para
-`/marcar` e para a música). `/convite` gera esse link pronto depois que
-o bot já estiver rodando em pelo menos um servidor.
+Ao gerar o link de convite no Discord Developer Portal, marque o escopo
+`bot` e `applications.commands`, e conceda as permissões
+`Send Messages`, `Embed Links`, `Attach Files` e `Use Slash Commands`
+(mais `Manage Guild` para quem for usar `/admin`, controlado pelo próprio
+Discord).
 
 ### Rodar o bot + painel
 
@@ -133,18 +100,6 @@ npm run deploy-commands
 | `/admin pix chave\|provedor\|ver` | Configura/consulta a chave e o provedor de Pix. |
 | `/admin saques listar\|concluir\|cancelar` | Gerencia solicitações de retirada pendentes. |
 | `/admin painel` | Mostra o link do painel administrativo. |
-| `/setup` | Cria/reconfigura cargos, categorias e canais automaticamente (admin). |
-| `/admin moderacao ver\|sistema\|acao\|canal-logs` | Configura Anti-Link, Anti-Spam, Anti-NSFW e Avisos. |
-| `/avisos add\|ver\|limpar` | Gerencia avisos (warns) de um membro. |
-| `/marcar [mensagem] [aqui]` | Marca @everyone ou @here com uma mensagem. |
-| `/tocar musica` | Toca uma música/playlist do YouTube na call (nome ou link). |
-| `/pular` `/pausar` `/retomar` `/parar` `/fila` | Controles de música. |
-| `/painel` | Posta um painel de botões/formulários com todos os comandos acima. |
-| `/convite` | Gera o link para adicionar o bot em outro servidor. |
-| `/criador` | Mostra o criador do bot (usa `OWNER_ID`). |
-| `/meuid [usuario]` | Mostra um ID do Discord pronto para copiar. |
-| `/ping` | Latência do bot. |
-| `/ajuda` | Lista todos os comandos. |
 | `/passe enviar id` | *(desativado por padrão, ver nota abaixo)* Confere o jogador e, após confirmação, envia um Passe Booyah. |
 | `/passe estoque` | *(desativado por padrão)* Consulta o estoque da API de passe (admin). |
 | `/passe dias` | *(desativado por padrão)* Consulta a validade da chave da API de passe (admin). |
@@ -170,45 +125,6 @@ Configure `PASSE_API_KEY` e, opcionalmente, `PASSE_API_BASE_URL=https://fluxggx.
 `Gerenciar Servidor`. Para liberar também para um cargo específico de
 staff, defina `ADMIN_ROLE_ID` (ou configure pelo painel web) — o bot
 verifica esse cargo internamente antes de executar qualquer subcomando.
-
-## Moderação automática
-
-Cada servidor tem sua própria configuração (tabela `guild_settings`),
-criada com os padrões abaixo assim que o bot entra nele:
-
-- **Anti-Link**: apaga/pune links não permitidos. Cargos "Ceifador Admin"
-  e "Moderador" (criados pelo `/setup`) sempre podem enviar links; a
-  whitelist de domínios e a lista de cargos liberados ficam em
-  `src/moderation/defaults.js`.
-- **Anti-Spam**: detecta flood (muitas mensagens em pouco tempo) e
-  mensagens repetidas.
-- **Anti-NSFW**: bloqueia texto, links e nomes de figurinha explícitos
-  por um filtro heurístico. Para detecção real de imagens/vídeos
-  (não só nome de arquivo), configure `SIGHTENGINE_API_USER` e
-  `SIGHTENGINE_API_SECRET` — sem isso, mídia só é barrada se
-  `blockMediaOutsideNsfw` estiver ligado.
-- **Avisos**: acumula avisos por membro; ao atingir o limite configurado,
-  aplica a punição automaticamente (padrão: kick aos 3 avisos).
-
-Ajuste tudo com `/admin moderacao` (ver/sistema/acao/canal-logs) ou rode
-`/setup` primeiro para já ganhar os cargos, categorias, canais e o canal
-de logs prontos.
-
-## Música
-
-`/tocar` funciona direto com `play-dl` (biblioteca padrão do ecossistema
-discord.js), sem nenhuma configuração extra. Duas melhorias opcionais,
-ambas em `.env`:
-
-- `YOUTUBE_API_KEY` — usa a YouTube Data API oficial para busca/playlist
-  (mais confiável que scraping em hospedagens na nuvem).
-- `YOUTUBE_COOKIE` — cookie de uma conta logada, reduz o bloqueio
-  "Sign in to confirm you're not a bot" que o YouTube aplica a IPs de
-  datacenter.
-
-`YTAUDIO_API_URL`/`YTAUDIO_API_KEY` só existem para quem já tem (ou
-hospeda) sua própria API de download de áudio como contorno adicional —
-não vêm com nenhum serviço de terceiros pré-configurado.
 
 ## Modos de Pix
 
@@ -294,19 +210,15 @@ Acesse `PUBLIC_URL` (ou `http://localhost:PORT`) e faça login com
 src/
   config/env.js          Configuração (variáveis de ambiente + overrides do painel)
   database/               Schema e conexão SQLite (node:sqlite)
-  repositories/            Acesso a dados (usuários, transações, moderação, configurações)
+  repositories/            Acesso a dados (usuários, transações, configurações)
   services/
     balanceService.js      Regras de saldo (depósito, retirada, ajustes)
     pix/                   Provedores de Pix (manual, Mercado Pago, Efí)
-  moderation/              Anti-Link, Anti-Spam, Anti-NSFW, avisos, vision API (Sightengine)
-  music/                   Player de música (GuildPlayer, manager, YouTube)
   discord/
     client.js               Bootstrap do client discord.js
     commands/                Comandos de barra
-    events/                  Handlers de evento (interações, mensagens, novo servidor)
+    events/                  Handlers de evento
     embeds/theme.js          Tema visual "Ceifador" para os embeds
-    panel/menu.js            Painel de botões/formulários (/painel)
-    disabledCommands.js      Comandos presentes no repo mas fora do registro automático
     notifier.js              DMs e avisos automáticos
   web/
     server.js                App Express (painel + webhook)

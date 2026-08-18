@@ -4,7 +4,6 @@ const { getConfig } = require('./config/env');
 const { createClient } = require('./discord/client');
 const { createServer } = require('./web/server');
 const { deployCommands } = require('./discord/deployCommands');
-const { initMusic } = require('./music/init');
 
 async function main() {
   const config = getConfig();
@@ -23,8 +22,6 @@ async function main() {
   } catch (err) {
     console.error('[discord] Falha ao registrar comandos de barra automaticamente:', err.message);
   }
-
-  await initMusic();
 
   const client = createClient();
   await client.login(config.discord.token);

@@ -40,20 +40,3 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
-
-CREATE TABLE IF NOT EXISTS guild_settings (
-  guild_id TEXT PRIMARY KEY,
-  settings_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS warnings (
-  id TEXT PRIMARY KEY,
-  guild_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  reason TEXT NOT NULL,
-  moderator_id TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_warnings_guild_user ON warnings(guild_id, user_id);

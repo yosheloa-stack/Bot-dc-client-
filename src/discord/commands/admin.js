@@ -1,9 +1,8 @@
 'use strict';
 
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const settingsRepository = require('../../repositories/settingsRepository');
 const transactionRepository = require('../../repositories/transactionRepository');
-const guildSettingsRepository = require('../../repositories/guildSettingsRepository');
 const balanceService = require('../../services/balanceService');
 const { getConfig } = require('../../config/env');
 const { isAdmin } = require('../permissions');
@@ -101,65 +100,6 @@ module.exports = {
             .addStringOption((o) => o.setName('id').setDescription('ID da transação').setRequired(true))
         )
     )
-    .addSubcommandGroup((group) =>
-      group
-        .setName('moderacao')
-        .setDescription('Configura a moderação automática do servidor')
-        .addSubcommand((sub) => sub.setName('ver').setDescription('Mostra a configuração atual de moderação'))
-        .addSubcommand((sub) =>
-          sub
-            .setName('sistema')
-            .setDescription('Liga ou desliga um sistema de moderação')
-            .addStringOption((o) =>
-              o
-                .setName('nome')
-                .setDescription('Qual sistema')
-                .setRequired(true)
-                .addChoices(
-                  { name: 'Anti-Link', value: 'antiLink' },
-                  { name: 'Anti-Spam', value: 'antiSpam' },
-                  { name: 'Anti-NSFW', value: 'antiNsfw' },
-                  { name: 'Avisos', value: 'warnings' }
-                )
-            )
-            .addBooleanOption((o) => o.setName('ativo').setDescription('Ligado (true) ou desligado (false)').setRequired(true))
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('acao')
-            .setDescription('Define a punição de um sistema')
-            .addStringOption((o) =>
-              o
-                .setName('sistema')
-                .setDescription('Qual sistema')
-                .setRequired(true)
-                .addChoices(
-                  { name: 'Anti-Link', value: 'antiLink' },
-                  { name: 'Anti-Spam', value: 'antiSpam' },
-                  { name: 'Anti-NSFW', value: 'antiNsfw' }
-                )
-            )
-            .addStringOption((o) =>
-              o
-                .setName('acao')
-                .setDescription('O que fazer')
-                .setRequired(true)
-                .addChoices(
-                  { name: 'Apagar mensagem', value: 'delete' },
-                  { name: 'Avisar', value: 'warn' },
-                  { name: 'Silenciar (timeout)', value: 'timeout' },
-                  { name: 'Expulsar (kick)', value: 'kick' },
-                  { name: 'Banir (ban)', value: 'ban' }
-                )
-            )
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName('canal-logs')
-            .setDescription('Define o canal onde o bot registra as ações de moderação')
-            .addChannelOption((o) => o.setName('canal').setDescription('Canal de logs').addChannelTypes(ChannelType.GuildText).setRequired(true))
-        )
-    )
     .addSubcommand((sub) => sub.setName('painel').setDescription('Mostra o link do painel administrativo web')),
 
   async execute(interaction) {
@@ -192,9 +132,6 @@ module.exports = {
     }
     if (group === 'saques') {
       return handleSaques(interaction, sub);
-    }
-    if (group === 'moderacao') {
-      return handleModeracao(interaction, sub);
     }
 
     return interaction.reply({ content: `${EMOJI.cross} Subcomando desconhecido.`, ephemeral: true });
@@ -328,52 +265,4 @@ async function handleSaques(interaction, sub) {
     .setTitle(sub === 'concluir' ? `${EMOJI.check} Retirada concluída` : `${EMOJI.cross} Retirada cancelada`)
     .setDescription(`Transação \`${id}\` de <@${tx.discord_id}> — ${centsToBRL(tx.amount_cents)}`);
   await interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-}
-
-async function handleModeracao(interaction, sub) {
-  const guildId = interaction.guild.id;
-
-  if (sub === 'ver') {
-    const s = guildSettingsRepository.getSettings(guildId);
-    const status = (b) => (b ? '🟢 Ligado' : '🔴 Desligado');
-    const embed = baseEmbed()
-      .setTitle('🛡️ Configuração de moderação')
-      .addFields(
-        { name: 'Anti-Link', value: `${status(s.antiLink.enabled)} • ação: \`${s.antiLink.action}\`` },
-        { name: 'Anti-Spam', value: `${status(s.antiSpam.enabled)} • ${s.antiSpam.maxMessages} msg / ${s.antiSpam.intervalMs / 1000}s • ação: \`${s.antiSpam.action}\`` },
-        { name: 'Anti-NSFW', value: `${status(s.antiNsfw.enabled)} • ação: \`${s.antiNsfw.action}\` • API externa: ${s.antiNsfw.useExternalApi ? 'sim' : 'não'}` },
-        { name: 'Avisos', value: `${status(s.warnings.enabled)} • limite: ${s.warnings.threshold} → \`${s.warnings.punishment}\`` },
-        { name: 'Canal de logs', value: s.logChannelId ? `<#${s.logChannelId}>` : 'não definido (rode /setup)' }
-      );
-    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-  }
-
-  if (sub === 'sistema') {
-    const nome = interaction.options.getString('nome', true);
-    const ativo = interaction.options.getBoolean('ativo', true);
-    guildSettingsRepository.updateSettings(guildId, { [nome]: { enabled: ativo } });
-    const embed = baseEmbed({ color: COLORS.success })
-      .setTitle(`${EMOJI.check} Sistema atualizado`)
-      .setDescription(`**${nome}** agora está **${ativo ? 'ligado' : 'desligado'}**.`);
-    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-  }
-
-  if (sub === 'acao') {
-    const sistema = interaction.options.getString('sistema', true);
-    const acao = interaction.options.getString('acao', true);
-    guildSettingsRepository.updateSettings(guildId, { [sistema]: { action: acao } });
-    const embed = baseEmbed({ color: COLORS.success })
-      .setTitle(`${EMOJI.check} Punição atualizada`)
-      .setDescription(`Punição do **${sistema}** definida para \`${acao}\`.`);
-    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-  }
-
-  if (sub === 'canal-logs') {
-    const canal = interaction.options.getChannel('canal', true);
-    guildSettingsRepository.updateSettings(guildId, { logChannelId: canal.id });
-    const embed = baseEmbed({ color: COLORS.success })
-      .setTitle(`${EMOJI.check} Canal de logs definido`)
-      .setDescription(`As ações de moderação serão registradas em ${canal}.`);
-    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-  }
 }
