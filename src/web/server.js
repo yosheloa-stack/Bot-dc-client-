@@ -5,6 +5,7 @@ const express = require('express');
 const session = require('express-session');
 const { getConfig } = require('../config/env');
 const requireAdmin = require('./middleware/requireAdmin');
+const { SqliteSessionStore } = require('./sessionStore');
 const { centsToBRL, formatDate } = require('../utils/format');
 const { typeLabel, statusLabel } = require('../utils/labels');
 
@@ -34,6 +35,7 @@ function createServer() {
 
   app.use(
     session({
+      store: new SqliteSessionStore(),
       secret: config.web.sessionSecret,
       resave: false,
       saveUninitialized: false,
