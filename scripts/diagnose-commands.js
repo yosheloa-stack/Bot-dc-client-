@@ -26,5 +26,5 @@ console.log(JSON.stringify({
   disabledFiles: [...DISABLED_COMMAND_FILES],
   commandCount: commands.length,
   commandNames: names,
-  requiredEnv: ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'],
+  requiredEnv: ['DISCORD_TOKEN'],
 }, null, 2));

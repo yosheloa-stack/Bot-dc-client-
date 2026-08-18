@@ -9,7 +9,6 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "deploy-commands": "node src/discord/deployCommands.js",
     "test": "node scripts/diagnose-commands.js"
   },
   "repository": {

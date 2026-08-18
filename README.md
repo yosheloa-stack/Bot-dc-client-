@@ -51,8 +51,7 @@ cp .env.example .env
 
 Preencha o `.env`:
 
-1. `DISCORD_TOKEN` e `DISCORD_CLIENT_ID` — na página da sua aplicação no
-   Discord Developer Portal.
+1. `DISCORD_TOKEN` — em Discord Developer Portal → Bot → Token.
 2. `PIX_KEY` — sua chave Pix, usada no modo manual.
 3. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
    — apenas se for usar Pix automático (ver [Modos de Pix](#modos-de-pix)).
@@ -79,19 +78,19 @@ configurações de instalação atualizadas.
 npm start
 ```
 
-**Os comandos de barra são registrados automaticamente toda vez que o
-bot inicia** — não é preciso rodar nada separado, nem na Square Cloud
-nem em qualquer outro host. O registro é sempre global; o Discord pode levar
-algum tempo para propagar os comandos na primeira publicação.
+**Os comandos de barra são registrados automaticamente depois que o bot
+conecta** — não é preciso preencher Application ID, Guild ID ou rodar script
+separado. O registro é global e o Discord pode levar algum tempo para
+propagar os comandos na primeira publicação.
 
 ### Quando o bot está online, mas os comandos não aparecem
 
-Confirme que `DISCORD_CLIENT_ID` é o Application ID correto. Os comandos
-são publicados globalmente, sem configuração de servidor de teste. Se o bot
-foi instalado antes da configuração atual do Discord, refaça o convite pelo
-Developer Portal. O bot só fica conectado depois
-que o registro dos comandos termina com sucesso e informa no log os nomes
-registrados. Os comandos deste projeto são comandos de barra: escrever
+Confirme que `DISCORD_TOKEN` é o token atual do bot e que o processo está
+usando a versão mais recente do projeto. Os comandos são publicados
+globalmente, sem configuração de servidor de teste. Se o bot foi instalado
+antes da configuração atual do Discord, refaça o convite pelo Developer
+Portal. Depois do login, o log deve informar os nomes registrados. Os
+comandos deste projeto são comandos de barra: escrever
 `/saldo`, `/depositar`, `/historico`, `/sacar` ou `/admin` no campo de mensagem
 é o fluxo esperado; não há comandos prefixados tradicionais.
 
@@ -104,13 +103,6 @@ npm test
 Se `PIX_PROVIDER` for `mercadopago` ou `efi`, um servidor HTTP mínimo
 (sem interface) também sobe, só para receber a notificação de pagamento
 — ver [Modos de Pix](#modos-de-pix).
-
-Se preferir registrar os comandos manualmente (ex: só quer atualizar os
-comandos sem reiniciar o bot), o script standalone continua disponível:
-
-```bash
-npm run deploy-commands
-```
 
 ## Comandos do Discord
 
@@ -274,7 +266,7 @@ AUTORESTART=true
    [Dashboard da Square Cloud](https://squarecloud.app) ou pela CLI deles.
 3. Na aba **Environment Variables** do app (não no zip), cadastre as
    mesmas variáveis do `.env.example`: `DISCORD_TOKEN`,
-   `DISCORD_CLIENT_ID`, `PIX_KEY`, etc. Se você definiu `SUBDOMAIN`,
+   `PIX_KEY`, etc. Se você definiu `SUBDOMAIN`,
    configure também `PUBLIC_URL=https://ceifador.squareweb.app` (troque
    pelo subdomínio escolhido) para os links do webhook ficarem corretos.
 4. Se for usar Efí Bank, o certificado `.p12` precisa existir no
