@@ -61,7 +61,7 @@ module.exports = {
           `**Chave Pix:** \`${pixKey}\``,
           `**ID:** \`${tx.id}\``,
           '',
-          `Processe no painel administrativo: ${config.web.publicUrl}/transactions`,
+          'Processe com `/admin saques concluir` ou `/admin saques cancelar`.',
         ].join('\n')
       );
     await notifyAdminLog(config, logEmbed);

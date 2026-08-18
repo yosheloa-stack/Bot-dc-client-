@@ -21,13 +21,10 @@ function getConfig() {
       adminRoleId: db.admin_role_id || process.env.ADMIN_ROLE_ID || '',
       logChannelId: db.log_channel_id || process.env.ADMIN_LOG_CHANNEL_ID || '',
     },
-    web: {
-      enabled: bool(process.env.WEB_PANEL_ENABLED, true),
+    webhook: {
+      enabled: bool(process.env.WEBHOOK_SERVER_ENABLED, true),
       port,
       publicUrl: (process.env.PUBLIC_URL || `http://localhost:${port}`).replace(/\/$/, ''),
-      adminUser: process.env.ADMIN_PANEL_USER || 'admin',
-      adminPassword: process.env.ADMIN_PANEL_PASSWORD || 'mude-esta-senha',
-      sessionSecret: process.env.SESSION_SECRET || 'mude-este-segredo-agora',
     },
     passe: {
       apiKey: process.env.PASSE_API_KEY || '',

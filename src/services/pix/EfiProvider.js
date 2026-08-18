@@ -38,7 +38,7 @@ class EfiProvider extends PixProvider {
       throw new Error('Credenciais da Efí (Client ID/Secret) não configuradas.');
     }
     if (!this.config.pix.key) {
-      throw new Error('Chave Pix não configurada. Configure no painel administrativo.');
+      throw new Error('Chave Pix não configurada. Configure com `/admin pix chave`.');
     }
 
     const txid = referenceId.replace(/-/g, '');

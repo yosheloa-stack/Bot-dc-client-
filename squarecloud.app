@@ -1,5 +1,5 @@
 DISPLAY_NAME=Ceifador
-DESCRIPTION=Bot de Discord com venda automatica de Passe Booyah
+DESCRIPTION=Bot de Discord com saldo e Pix automatico
 MAIN=src/index.js
 MEMORY=512
 VERSION=recommended

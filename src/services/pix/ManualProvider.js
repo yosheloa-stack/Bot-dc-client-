@@ -5,10 +5,10 @@ const PixProvider = require('./PixProvider');
 
 /**
  * Provedor "manual": gera um Pix estático (Copia e Cola + QR Code) usando
- * a chave Pix cadastrada no painel administrativo, sem depender de nenhum
+ * a chave Pix cadastrada via `/admin pix chave`, sem depender de nenhum
  * banco/PSP externo. Como uma chave Pix estática não expõe uma API de
  * confirmação automática, a liberação do saldo nesse modo é feita pelo
- * administrador (painel web ou comando /admin) após checar o extrato.
+ * administrador (`/admin depositos confirmar`) após checar o extrato.
  */
 class ManualProvider extends PixProvider {
   constructor(config) {
@@ -19,7 +19,7 @@ class ManualProvider extends PixProvider {
   async createCharge({ amountCents, description, referenceId }) {
     const { key, merchantName, merchantCity } = this.config.pix;
     if (!key) {
-      throw new Error('Chave Pix não configurada. Configure no painel administrativo antes de gerar cobranças.');
+      throw new Error('Chave Pix não configurada. Configure com `/admin pix chave` antes de gerar cobranças.');
     }
 
     const pix = createStaticPix({

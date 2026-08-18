@@ -2,7 +2,7 @@
 
 const { getConfig } = require('./config/env');
 const { createClient } = require('./discord/client');
-const { createServer } = require('./web/server');
+const { createWebhookServer } = require('./webhookServer');
 const { deployCommands } = require('./discord/deployCommands');
 
 async function main() {
@@ -26,10 +26,10 @@ async function main() {
   const client = createClient();
   await client.login(config.discord.token);
 
-  if (config.web.enabled) {
-    const app = createServer();
-    app.listen(config.web.port, () => {
-      console.log(`[web] Painel administrativo disponível em ${config.web.publicUrl}`);
+  if (config.webhook.enabled) {
+    const server = createWebhookServer();
+    server.listen(config.webhook.port, () => {
+      console.log(`[webhook] Escutando notificações de pagamento em ${config.webhook.publicUrl}`);
     });
   }
 }

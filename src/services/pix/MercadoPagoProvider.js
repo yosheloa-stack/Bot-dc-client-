@@ -12,7 +12,7 @@ const API_BASE = 'https://api.mercadopago.com';
  * intervencao manual.
  *
  * Requer MP_ACCESS_TOKEN (Access Token de producao ou teste) configurado
- * no .env ou no painel administrativo.
+ * na variavel de ambiente.
  */
 class MercadoPagoProvider extends PixProvider {
   constructor(config) {
@@ -26,10 +26,10 @@ class MercadoPagoProvider extends PixProvider {
 
   async createCharge({ amountCents, description, referenceId }) {
     if (!this.accessToken) {
-      throw new Error('MP_ACCESS_TOKEN não configurado. Configure no painel administrativo.');
+      throw new Error('MP_ACCESS_TOKEN não configurado. Defina essa variável de ambiente.');
     }
 
-    const notificationUrl = `${this.config.web.publicUrl}/webhook/mercadopago`;
+    const notificationUrl = `${this.config.webhook.publicUrl}/webhook/mercadopago`;
 
     const response = await fetch(`${API_BASE}/v1/payments`, {
       method: 'POST',

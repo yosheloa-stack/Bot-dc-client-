@@ -5,10 +5,11 @@ const settingsRepository = require('../../repositories/settingsRepository');
 const transactionRepository = require('../../repositories/transactionRepository');
 const balanceService = require('../../services/balanceService');
 const { getConfig } = require('../../config/env');
+const { getPixProvider, EfiProvider } = require('../../services/pix');
 const { isAdmin } = require('../permissions');
 const { baseEmbed, logoAttachment, EMOJI, COLORS } = require('../embeds/theme');
 const { centsToBRL, reaisToCents, formatDate } = require('../../utils/format');
-const { notifyWithdrawResolved } = require('../notifier');
+const { notifyWithdrawResolved, notifyDepositCompleted } = require('../notifier');
 
 function maskKey(key) {
   if (!key) return '_não configurada_';
@@ -69,6 +70,7 @@ module.exports = {
             )
         )
         .addSubcommand((sub) => sub.setName('ver').setDescription('Mostra a configuração atual de Pix'))
+        .addSubcommand((sub) => sub.setName('webhook').setDescription('Registra a URL de notificação na Efí (necessário 1x ao usar esse provedor)'))
     )
     .addSubcommandGroup((group) =>
       group
@@ -100,7 +102,30 @@ module.exports = {
             .addStringOption((o) => o.setName('id').setDescription('ID da transação').setRequired(true))
         )
     )
-    .addSubcommand((sub) => sub.setName('painel').setDescription('Mostra o link do painel administrativo web')),
+    .addSubcommandGroup((group) =>
+      group
+        .setName('depositos')
+        .setDescription('Gerenciar depósitos pendentes (modo Pix manual)')
+        .addSubcommand((sub) => sub.setName('listar').setDescription('Lista depósitos pendentes'))
+        .addSubcommand((sub) =>
+          sub
+            .setName('confirmar')
+            .setDescription('Confirma um depósito e libera o saldo')
+            .addStringOption((o) => o.setName('id').setDescription('ID da transação').setRequired(true))
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('falhou')
+            .setDescription('Marca um depósito como falho (sem liberar saldo)')
+            .addStringOption((o) => o.setName('id').setDescription('ID da transação').setRequired(true))
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('consultar')
+            .setDescription('Reconsulta o status de um depósito automático (Mercado Pago/Efí) direto na API')
+            .addStringOption((o) => o.setName('id').setDescription('ID da transação').setRequired(true))
+        )
+    ),
 
   async execute(interaction) {
     const config = getConfig();
@@ -114,13 +139,6 @@ module.exports = {
     const group = interaction.options.getSubcommandGroup(false);
     const sub = interaction.options.getSubcommand();
 
-    if (!group && sub === 'painel') {
-      const embed = baseEmbed()
-        .setTitle(`${EMOJI.scythe} Painel Administrativo`)
-        .setDescription(`Acesse: ${config.web.publicUrl}\n\nUse as credenciais definidas em \`ADMIN_PANEL_USER\` / \`ADMIN_PANEL_PASSWORD\`.`);
-      return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
-    }
-
     if (group === 'saldo') {
       return handleSaldo(interaction, sub);
     }
@@ -132,6 +150,9 @@ module.exports = {
     }
     if (group === 'saques') {
       return handleSaques(interaction, sub);
+    }
+    if (group === 'depositos') {
+      return handleDepositos(interaction, sub);
     }
 
     return interaction.reply({ content: `${EMOJI.cross} Subcomando desconhecido.`, ephemeral: true });
@@ -182,6 +203,26 @@ async function handlePix(interaction, sub, config) {
     const embed = baseEmbed({ color: COLORS.success })
       .setTitle(`${EMOJI.pix} Provedor de Pix atualizado`)
       .setDescription(`Provedor ativo: **${valor}**`);
+    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+  }
+
+  if (sub === 'webhook') {
+    const provider = getPixProvider(config);
+    if (!(provider instanceof EfiProvider)) {
+      const embed = baseEmbed({ color: COLORS.danger })
+        .setTitle(`${EMOJI.cross} Provedor não é a Efí`)
+        .setDescription('Troque o provedor para Efí (`/admin pix provedor`) antes de registrar o webhook.');
+      return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+    }
+    try {
+      await provider.registerWebhook(config.webhook.publicUrl);
+    } catch (err) {
+      const embed = baseEmbed({ color: COLORS.danger }).setTitle(`${EMOJI.cross} Falha ao registrar webhook`).setDescription(err.message);
+      return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+    }
+    const embed = baseEmbed({ color: COLORS.success })
+      .setTitle(`${EMOJI.check} Webhook registrado na Efí`)
+      .setDescription(`URL: \`${config.webhook.publicUrl}/webhook/efi\``);
     return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
   }
 
@@ -265,4 +306,68 @@ async function handleSaques(interaction, sub) {
     .setTitle(sub === 'concluir' ? `${EMOJI.check} Retirada concluída` : `${EMOJI.cross} Retirada cancelada`)
     .setDescription(`Transação \`${id}\` de <@${tx.discord_id}> — ${centsToBRL(tx.amount_cents)}`);
   await interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+}
+
+async function handleDepositos(interaction, sub) {
+  if (sub === 'listar') {
+    const pending = transactionRepository.listAll({ status: 'pending', type: 'deposit', limit: 10 });
+    const embed = baseEmbed().setTitle(`${EMOJI.hourglass} Depósitos pendentes`);
+    if (pending.length === 0) {
+      embed.setDescription('Nenhum depósito pendente.');
+    } else {
+      embed.setDescription(
+        pending
+          .map((tx) => `**ID:** \`${tx.id}\`\n<@${tx.discord_id}> — ${centsToBRL(tx.amount_cents)} — ${formatDate(tx.created_at)} — provedor: \`${tx.provider}\``)
+          .join('\n\n')
+      );
+    }
+    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+  }
+
+  const id = interaction.options.getString('id', true).trim();
+  const tx = transactionRepository.getTransaction(id);
+  if (!tx || tx.type !== 'deposit') {
+    return interaction.reply({ content: `${EMOJI.cross} Depósito não encontrado.`, ephemeral: true });
+  }
+  if (tx.status !== 'pending') {
+    return interaction.reply({ content: `${EMOJI.cross} Este depósito já foi ${tx.status === 'completed' ? 'confirmado' : 'processado'}.`, ephemeral: true });
+  }
+
+  if (sub === 'confirmar') {
+    const updated = balanceService.completeDeposit(id);
+    await notifyDepositCompleted(updated.discord_id, updated);
+    const embed = baseEmbed({ color: COLORS.success })
+      .setTitle(`${EMOJI.check} Depósito confirmado`)
+      .setDescription(`Transação \`${id}\` de <@${tx.discord_id}> — ${centsToBRL(tx.amount_cents)}. Saldo liberado.`);
+    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+  }
+
+  if (sub === 'falhou') {
+    balanceService.failDeposit(id);
+    const embed = baseEmbed({ color: COLORS.danger })
+      .setTitle(`${EMOJI.cross} Depósito marcado como falho`)
+      .setDescription(`Transação \`${id}\` de <@${tx.discord_id}> — ${centsToBRL(tx.amount_cents)}. Nenhum saldo foi liberado.`);
+    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+  }
+
+  if (sub === 'consultar') {
+    const config = getConfig();
+    const provider = getPixProvider(config);
+    try {
+      const status = await provider.fetchStatus(tx.provider_txid);
+      if (status.status === 'completed') {
+        const updated = balanceService.completeDeposit(id);
+        await notifyDepositCompleted(updated.discord_id, updated);
+      } else if (status.status === 'failed') {
+        balanceService.failDeposit(id);
+      }
+      const embed = baseEmbed({ color: COLORS.success })
+        .setTitle(`${EMOJI.pix} Status consultado`)
+        .setDescription(`Transação \`${id}\`: status atual na API é \`${status.status}\`.`);
+      return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+    } catch (err) {
+      const embed = baseEmbed({ color: COLORS.danger }).setTitle(`${EMOJI.cross} Falha ao consultar`).setDescription(err.message);
+      return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+    }
+  }
 }

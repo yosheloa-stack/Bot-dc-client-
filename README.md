@@ -1,44 +1,46 @@
 # 🗡️ Ceifador — Bot de Discord com Saldo e Pix Automático
 
 Bot de Discord com identidade visual dark (preto/cinza + vermelho sangue),
-sistema de saldo com histórico de transações, cobrança Pix automática (QR
-Code + Copia e Cola) e painel administrativo web para configurar a chave
-Pix, acompanhar pagamentos e gerenciar usuários.
+sistema de saldo com histórico de transações e cobrança Pix automática
+(QR Code + Copia e Cola). Tudo é operado por comandos de barra no
+Discord — não existe painel web nem login. Só há um servidor HTTP
+mínimo, sem interface nenhuma, que recebe as notificações de pagamento
+do Mercado Pago/Efí.
 
 ## Funcionalidades
 
 - **Saldo automático**: consulta (`/saldo`), depósito via Pix (`/depositar`),
   retirada (`/sacar`) e histórico de transações (`/historico`).
 - **Pix automático**: gera QR Code e Copia e Cola sob demanda. Com o
-  provedor Mercado Pago, o saldo é liberado automaticamente assim que o
-  pagamento é identificado (via webhook). Com o provedor manual, o Pix é
-  gerado a partir da sua própria chave e a confirmação é feita pelo
-  administrador no painel.
-- **Painel administrativo web**: login protegido, configuração da chave
-  Pix e do provedor, credenciais do Mercado Pago, cargo de administrador
-  do Discord, listagem de usuários/saldos, histórico completo de
-  pagamentos e gerenciamento de depósitos/retiradas pendentes.
-- **Identidade visual "Ceifador"**: embeds do Discord e painel web em tema
-  escuro com detalhes em vermelho sangue e uma foice estilizada como logo.
+  provedor Mercado Pago ou Efí Bank, o saldo é liberado automaticamente
+  assim que o pagamento é identificado (via webhook). Com o provedor
+  manual, o Pix é gerado a partir da sua própria chave e a confirmação é
+  feita por um administrador com `/admin depositos confirmar`.
+- **Administração 100% por Discord**: ajuste de saldo, configuração da
+  chave/provedor de Pix, aprovação de depósitos/retiradas — tudo por
+  `/admin`. Só o token do Mercado Pago e as credenciais da Efí ficam de
+  fora dos comandos (por segurança) e são configurados por variável de
+  ambiente.
+- **Identidade visual "Ceifador"**: embeds do Discord em tema escuro com
+  detalhes em vermelho sangue e uma ilustração do Ceifador como logo.
 
 ## Stack técnica
 
 - [discord.js v14](https://discord.js.org/) para o bot.
-- [express](https://expressjs.com/) + [EJS](https://ejs.co/) para o painel
-  web (mesmo processo do bot).
 - `node:sqlite` (nativo do Node.js 22+) como banco de dados — sem
   dependências nativas para instalar.
 - [`pix-utils`](https://www.npmjs.com/package/pix-utils) para gerar o Pix
   estático (Copia e Cola + QR Code) no modo manual.
-- API REST do Mercado Pago para o modo automático.
+- API REST do Mercado Pago e da Efí Bank para os modos automáticos.
+- `node:http` puro para o endpoint de webhook — sem framework web.
 
 ## Pré-requisitos
 
 - Node.js **22.5+** (usa o módulo experimental `node:sqlite`).
 - Uma aplicação/bot criada no [Discord Developer Portal](https://discord.com/developers/applications).
 - (Opcional, para Pix 100% automático) uma conta no
-  [Mercado Pago](https://www.mercadopago.com.br/developers) com um
-  Access Token.
+  [Mercado Pago](https://www.mercadopago.com.br/developers) ou na
+  [Efí Bank](https://sejaefi.com.br/).
 
 ## Instalação
 
@@ -54,35 +56,44 @@ Preencha o `.env`:
 2. `DISCORD_GUILD_ID` — ID do seu servidor de testes (para os comandos
    aparecerem instantaneamente durante o desenvolvimento). Remova antes de
    publicar globalmente.
-3. `ADMIN_PANEL_USER` / `ADMIN_PANEL_PASSWORD` / `SESSION_SECRET` — login
-   do painel web. **Troque os valores padrão.**
-4. `PIX_KEY` — sua chave Pix, usada no modo manual.
-5. `MP_ACCESS_TOKEN` — apenas se for usar `PIX_PROVIDER=mercadopago`.
+3. `PIX_KEY` — sua chave Pix, usada no modo manual.
+4. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
+   — apenas se for usar Pix automático (ver [Modos de Pix](#modos-de-pix)).
+
+### Intents privilegiadas
+
+Nenhuma intent privilegiada é necessária — o bot só usa comandos de
+barra, sem ler conteúdo de mensagem nem lista de membros.
 
 ### Convite do bot
 
-Ao gerar o link de convite no Discord Developer Portal, marque o escopo
-`bot` e `applications.commands`, e conceda as permissões
-`Send Messages`, `Embed Links`, `Attach Files` e `Use Slash Commands`
-(mais `Manage Guild` para quem for usar `/admin`, controlado pelo próprio
-Discord).
+Ao gerar o link de convite no Discord Developer Portal (OAuth2 → URL
+Generator), marque os escopos `bot` e `applications.commands`, e
+conceda as permissões `Send Messages`, `Embed Links`, `Attach Files` e
+`Use Slash Commands` (mais `Manage Guild` para quem for usar `/admin`,
+controlado pelo próprio Discord). **Os dois escopos são obrigatórios**:
+sem `applications.commands`, os comandos nunca aparecem no servidor,
+mesmo com o bot online.
 
-### Rodar o bot + painel
+### Rodar o bot
 
 ```bash
 npm start
 ```
 
-O painel administrativo sobe junto, em `http://localhost:3000` (ou a porta
-definida em `PORT`). **Os comandos de barra são registrados
-automaticamente toda vez que o bot inicia** — não é preciso rodar nada
-separado, nem na Square Cloud nem em qualquer outro host. Se definir
-`DISCORD_GUILD_ID`, o registro é instantâneo nesse servidor; sem ele, o
-registro é global e o Discord pode levar até 1 hora para propagar os
-comandos em todos os servidores na primeira vez.
+**Os comandos de barra são registrados automaticamente toda vez que o
+bot inicia** — não é preciso rodar nada separado, nem na Square Cloud
+nem em qualquer outro host. Se definir `DISCORD_GUILD_ID`, o registro é
+instantâneo nesse servidor; sem ele, o registro é global e o Discord
+pode levar até 1 hora para propagar os comandos em todos os servidores
+na primeira vez.
 
-Se preferir registrar manualmente (ex: só quer atualizar os comandos sem
-reiniciar o bot), o script standalone continua disponível:
+Se `PIX_PROVIDER` for `mercadopago` ou `efi`, um servidor HTTP mínimo
+(sem interface) também sobe, só para receber a notificação de pagamento
+— ver [Modos de Pix](#modos-de-pix).
+
+Se preferir registrar os comandos manualmente (ex: só quer atualizar os
+comandos sem reiniciar o bot), o script standalone continua disponível:
 
 ```bash
 npm run deploy-commands
@@ -97,9 +108,9 @@ npm run deploy-commands
 | `/sacar valor chave_pix` | Solicita uma retirada; o valor é reservado do saldo até um admin confirmar o envio. |
 | `/historico` | Lista as últimas 10 transações do usuário. |
 | `/admin saldo adicionar\|remover` | Ajusta o saldo de um usuário manualmente. |
-| `/admin pix chave\|provedor\|ver` | Configura/consulta a chave e o provedor de Pix. |
+| `/admin pix chave\|provedor\|ver\|webhook` | Configura/consulta a chave e o provedor de Pix; registra o webhook na Efí. |
+| `/admin depositos listar\|confirmar\|falhou\|consultar` | Gerencia depósitos pendentes (essencial no modo manual). |
 | `/admin saques listar\|concluir\|cancelar` | Gerencia solicitações de retirada pendentes. |
-| `/admin painel` | Mostra o link do painel administrativo. |
 | `/passe enviar id` | *(desativado por padrão, ver nota abaixo)* Confere o jogador e, após confirmação, envia um Passe Booyah. |
 | `/passe estoque` | *(desativado por padrão)* Consulta o estoque da API de passe (admin). |
 | `/passe dias` | *(desativado por padrão)* Consulta a validade da chave da API de passe (admin). |
@@ -115,39 +126,48 @@ npm run deploy-commands
 > autor do projeto, mas ativá-lo é uma decisão separada e explícita: para
 > isso, remova `'passe.js'` de `DISABLED_COMMAND_FILES` nesse arquivo.
 
-A integração da API de Passe Booyah usa `PASSE_API_KEY`, uma chave específica gerada no Painel de Passe e diferente da chave da API principal. O comando `/passe enviar id` primeiro consulta o jogador e somente envia o passe após o usuário clicar em **Sim, enviar passe**. Antes do envio, o bot verifica o saldo do cliente, reserva o preço configurado, chama a API e conclui a venda somente quando o retorno confirma o envio. Em caso de falha ou cancelamento, o saldo é estornado. Os comandos `/passe estoque` e `/passe dias` são restritos aos administradores.
-
-O dono configura o preço diretamente pelo Discord usando `/admin passe preco valor`, por exemplo `/admin passe preco valor:15`. O valor é salvo no banco SQLite e aplicado imediatamente, sem reiniciar o bot. `/admin passe ver` mostra o preço atual e se a chave da API está configurada.
-
-Configure `PASSE_API_KEY` e, opcionalmente, `PASSE_API_BASE_URL=https://fluxggx.squareweb.app` nas variáveis de ambiente da hospedagem. Nunca coloque a chave real no código, no `.env.example`, em commits ou em mensagens públicas. Se a chave tiver sido compartilhada com terceiros, gere uma nova no Painel de Passe.
+A integração da API de Passe Booyah usa `PASSE_API_KEY`, uma chave
+específica gerada no Painel de Passe (do operador da API, não do
+Ceifador) e diferente da chave da API principal. O comando `/passe
+enviar id` primeiro consulta o jogador e somente envia o passe após o
+usuário clicar em **Sim, enviar passe**. Antes do envio, o bot verifica
+o saldo do cliente, reserva o preço configurado, chama a API e conclui a
+venda somente quando o retorno confirma o envio. Em caso de falha ou
+cancelamento, o saldo é estornado. Os comandos `/passe estoque` e
+`/passe dias` são restritos aos administradores. O preço é definido com
+`/admin passe preco valor` (ex: `/admin passe preco valor:15`), salvo no
+SQLite e aplicado imediatamente. Configure `PASSE_API_KEY` só por
+variável de ambiente — nunca no código, no `.env.example` ou em commits.
 
 `/admin` fica visível por padrão apenas para quem tem a permissão
 `Gerenciar Servidor`. Para liberar também para um cargo específico de
-staff, defina `ADMIN_ROLE_ID` (ou configure pelo painel web) — o bot
-verifica esse cargo internamente antes de executar qualquer subcomando.
+staff, defina `ADMIN_ROLE_ID` no `.env` — o bot verifica esse cargo
+internamente antes de executar qualquer subcomando.
 
 ## Modos de Pix
 
 ### Manual (padrão, sem custos ou integrações)
 
-Usa a chave Pix cadastrada (`PIX_KEY` ou pelo painel) para gerar um Pix
-estático válido (Copia e Cola + QR Code) com valor e identificador únicos
-por cobrança. Como uma chave Pix isolada não expõe uma API de extrato,
-**a confirmação do pagamento é manual**: o administrador confere o
-recebimento no próprio banco e clica em "Confirmar" na aba *Transações*
-do painel (ou usa `/admin saques concluir`/`/admin` conforme o caso), e o
-saldo é liberado automaticamente para o usuário nesse momento.
+Usa a chave Pix cadastrada (`PIX_KEY` no `.env`, ou depois via `/admin
+pix chave`) para gerar um Pix estático válido (Copia e Cola + QR Code)
+com valor e identificador únicos por cobrança. Como uma chave Pix
+isolada não expõe uma API de extrato, **a confirmação do pagamento é
+manual**: o administrador confere o recebimento no próprio banco e roda
+`/admin depositos confirmar id:<id>` (o ID aparece em `/admin depositos
+listar`), liberando o saldo para o usuário nesse momento. Se o pagamento
+não chegar, `/admin depositos falhou` marca a cobrança como falha sem
+liberar saldo.
 
 ### Mercado Pago (100% automático)
 
-Defina `PIX_PROVIDER=mercadopago` e informe `MP_ACCESS_TOKEN`. O bot cria
-a cobrança diretamente pela API de pagamentos do Mercado Pago e configura
-a URL de notificação (`PUBLIC_URL/webhook/mercadopago`). Quando o
-pagamento é aprovado, o Mercado Pago chama esse webhook, o bot confirma o
-pagamento pela API e libera o saldo automaticamente — sem nenhuma ação
-manual. Configure a mesma URL de webhook no painel do Mercado Pago (o
-próprio painel administrativo do Ceifador mostra a URL correta em
-*Configurações*).
+Defina `PIX_PROVIDER=mercadopago` e informe `MP_ACCESS_TOKEN` no `.env`.
+O bot cria a cobrança diretamente pela API de pagamentos do Mercado Pago
+e configura a URL de notificação (`PUBLIC_URL/webhook/mercadopago`).
+Quando o pagamento é aprovado, o Mercado Pago chama esse webhook, o bot
+confirma o pagamento pela API e libera o saldo automaticamente — sem
+nenhuma ação manual. Configure a mesma URL de webhook no painel do
+Mercado Pago (o próprio `.env`/`PUBLIC_URL` já define qual é essa URL:
+`<PUBLIC_URL>/webhook/mercadopago`).
 
 > Para o webhook funcionar, `PUBLIC_URL` precisa ser um endereço
 > acessível publicamente (ex: seu domínio com HTTPS, ou um túnel como
@@ -156,16 +176,15 @@ próprio painel administrativo do Ceifador mostra a URL correta em
 ### Efí Bank (100% automático)
 
 Defina `PIX_PROVIDER=efi` e informe `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`
-(Efí > Minhas Aplicações). **Diferente do Mercado Pago, a API Pix da Efí
-exige mTLS em toda chamada**: baixe o certificado `.p12` no painel da Efí,
-salve-o em um caminho no servidor onde o bot roda (fora do repositório —
-por exemplo `certs/efi.p12`, que já está no `.gitignore`) e aponte
-`EFI_CERT_PATH` para esse arquivo. Se o certificado tiver senha, informe
-em `EFI_CERT_PASSPHRASE`.
+(Efí > Minhas Aplicações) no `.env`. **Diferente do Mercado Pago, a API
+Pix da Efí exige mTLS em toda chamada**: baixe o certificado `.p12` no
+painel da própria Efí, salve-o em um caminho no servidor onde o bot roda
+(fora do repositório — por exemplo `certs/efi.p12`, que já está no
+`.gitignore`) e aponte `EFI_CERT_PATH` para esse arquivo. Se o
+certificado tiver senha, informe em `EFI_CERT_PASSPHRASE`.
 
-Depois de salvar a chave Pix e as credenciais (pelo `.env` ou pelo painel,
-em *Configurações*), registre o webhook uma única vez clicando em
-**"Registrar webhook na Efí"** na mesma página — isso associa
+Depois de definir a chave Pix e as credenciais no `.env`, registre o
+webhook uma única vez com `/admin pix webhook` — isso associa
 `PUBLIC_URL/webhook/efi` à sua chave Pix na Efí. A partir daí, toda
 cobrança criada por `/depositar` é confirmada automaticamente: o bot
 recebe a notificação, reconsulta o status diretamente na API da Efí (o
@@ -176,10 +195,9 @@ antes de ir para produção.
 
 > **Segurança**: nunca cole Client ID/Secret ou o conteúdo do
 > certificado em locais versionados pelo git — use apenas o `.env`
-> (já ignorado) ou o painel administrativo, que grava tudo no SQLite
-> local (pasta `data/`, também ignorada). Se alguma credencial chegou a
-> ser exposta (ex: colada em um chat), gere novas no painel da Efí antes
-> de colocar o bot em produção.
+> (já ignorado). Se alguma credencial chegou a ser exposta (ex: colada
+> em um chat), gere novas no painel da Efí antes de colocar o bot em
+> produção.
 
 ### Retiradas (saques)
 
@@ -187,28 +205,14 @@ Não existe uma API genérica de "Pix automático de saída" sem que o bot
 seja operado por uma instituição de pagamento licenciada. Por isso,
 `/sacar` reserva o valor do saldo do usuário imediatamente e cria uma
 solicitação pendente; o administrador realiza a transferência Pix pelo
-próprio banco e marca a solicitação como concluída (ou cancela,
-devolvendo o saldo) pelo painel ou por `/admin saques`.
-
-## Painel administrativo
-
-Acesse `PUBLIC_URL` (ou `http://localhost:PORT`) e faça login com
-`ADMIN_PANEL_USER`/`ADMIN_PANEL_PASSWORD`. Nele você encontra:
-
-- **Painel**: métricas gerais (usuários, saldo em circulação, pendências).
-- **Usuários**: busca e ajuste manual de saldo.
-- **Transações**: histórico completo, com filtros por status/tipo e ações
-  para confirmar/cancelar depósitos e retiradas pendentes.
-- **Configurações**: chave Pix, provedor (manual, Mercado Pago ou Efí),
-  credenciais e certificado da Efí, token do Mercado Pago, limites de
-  depósito, cargo de admin e canal de log — tudo aplicado imediatamente,
-  sem reiniciar o bot.
+próprio banco e marca a solicitação como concluída (`/admin saques
+concluir`) ou cancela devolvendo o saldo (`/admin saques cancelar`).
 
 ## Estrutura do projeto
 
 ```
 src/
-  config/env.js          Configuração (variáveis de ambiente + overrides do painel)
+  config/env.js          Configuração (variáveis de ambiente + overrides via /admin)
   database/               Schema e conexão SQLite (node:sqlite)
   repositories/            Acesso a dados (usuários, transações, configurações)
   services/
@@ -220,9 +224,7 @@ src/
     events/                  Handlers de evento
     embeds/theme.js          Tema visual "Ceifador" para os embeds
     notifier.js              DMs e avisos automáticos
-  web/
-    server.js                App Express (painel + webhook)
-    routes/, views/, public/ Rotas, telas EJS e assets estáticos
+  webhookServer.js          Servidor HTTP mínimo (sem interface) para os webhooks de Pix
 assets/img/ceifador-logo.jpg  Logo do bot (ilustração do Ceifador)
 ```
 
@@ -238,17 +240,17 @@ MAIN=src/index.js
 MEMORY=512
 VERSION=recommended
 AUTORESTART=true
-SUBDOMAIN=ceifador
 ```
 
 - `MAIN=src/index.js` — mesmo entry point usado localmente (`npm start`).
 - `VERSION=recommended` — a Square Cloud usa uma versão recente do
   Node.js (bem acima do mínimo 22.5 exigido pelo `node:sqlite`), então
   não precisa fixar uma versão específica.
-- `SUBDOMAIN=ceifador` — gera uma URL pública (`https://ceifador.squareweb.app`)
-  para o painel administrativo e os webhooks do Pix. Troque por um nome
-  disponível; se remover essa linha, o painel/webhook não ficam expostos
-  publicamente (ok se você só quiser os comandos do Discord).
+- Sem `SUBDOMAIN`, o webhook não fica acessível publicamente — funciona
+  para tudo no modo manual de Pix. Se for usar Mercado Pago ou Efí
+  (confirmação automática), adicione `SUBDOMAIN=<algo-disponível>` pra
+  gerar uma URL pública (`https://<algo>.squareweb.app`) e configure
+  `PUBLIC_URL` com essa mesma URL nas Environment Variables.
 
 ### Passo a passo
 
@@ -259,10 +261,9 @@ SUBDOMAIN=ceifador
    [Dashboard da Square Cloud](https://squarecloud.app) ou pela CLI deles.
 3. Na aba **Environment Variables** do app (não no zip), cadastre as
    mesmas variáveis do `.env.example`: `DISCORD_TOKEN`,
-   `DISCORD_CLIENT_ID`, `PIX_KEY`, `ADMIN_PANEL_PASSWORD`,
-   `SESSION_SECRET`, etc. Se você definiu `SUBDOMAIN`, configure também
-   `PUBLIC_URL=https://ceifador.squareweb.app` (troque pelo subdomínio
-   escolhido) para os links do webhook ficarem corretos.
+   `DISCORD_CLIENT_ID`, `PIX_KEY`, etc. Se você definiu `SUBDOMAIN`,
+   configure também `PUBLIC_URL=https://ceifador.squareweb.app` (troque
+   pelo subdomínio escolhido) para os links do webhook ficarem corretos.
 4. Se for usar Efí Bank, o certificado `.p12` precisa existir no
    servidor da Square Cloud — envie-o pelo file explorer do dashboard
    para um caminho como `certs/efi.p12` e aponte `EFI_CERT_PATH` para
@@ -279,14 +280,16 @@ SUBDOMAIN=ceifador
    ele, o Discord nunca mostra os comandos, mesmo registrados.
 
 > A Square Cloud injeta a variável `PORT` automaticamente quando
-> `SUBDOMAIN` está configurado; o painel já lê `process.env.PORT`
+> `SUBDOMAIN` está configurado; o webhook já lê `process.env.PORT`
 > (`src/config/env.js`), então não precisa mexer em nada no código.
 
 ## Segurança
 
 - Nunca commite o arquivo `.env` (já está no `.gitignore`).
-- Troque `ADMIN_PANEL_PASSWORD` e `SESSION_SECRET` antes de publicar.
-- O token do Mercado Pago só pode ser definido pelo painel web
-  autenticado (não por comando de Discord), para evitar exposição em
-  canais públicos.
-- Em produção, sirva o painel atrás de HTTPS (ex: proxy reverso).
+- O token do Mercado Pago e as credenciais da Efí só podem ser definidos
+  por variável de ambiente (não por comando de Discord), para evitar
+  exposição em canais públicos — a linha "fulano usou /comando" aparece
+  no canal mesmo quando a resposta é só para quem usou o comando.
+- Não existe painel web, login ou porta exposta com interface: o único
+  endpoint HTTP (`/webhook/mercadopago` e `/webhook/efi`) só aceita as
+  notificações de pagamento dos dois provedores.
