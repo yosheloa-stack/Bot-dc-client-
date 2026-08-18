@@ -17,10 +17,13 @@ async function main() {
   // em qualquer host (Square Cloud, VPS, etc.) já seja suficiente — sem
   // precisar rodar `npm run deploy-commands` manualmente à parte.
   try {
-    const { count, scope } = await deployCommands(config);
-    console.log(`[discord] ${count} comando(s) de barra registrado(s) (${scope}).`);
+    const { count, scope, names } = await deployCommands(config);
+    console.log(`[discord] ${count} comando(s) de barra registrado(s) (${scope}): ${names.join(', ')}.`);
   } catch (err) {
     console.error('[discord] Falha ao registrar comandos de barra automaticamente:', err.message);
+    console.error('[discord] O bot não será conectado para evitar ficar online sem comandos disponíveis.');
+    process.exitCode = 1;
+    return;
   }
 
   const client = createClient();

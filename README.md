@@ -88,6 +88,25 @@ instantâneo nesse servidor; sem ele, o registro é global e o Discord
 pode levar até 1 hora para propagar os comandos em todos os servidores
 na primeira vez.
 
+### Quando o bot está online, mas os comandos não aparecem
+
+Confira se o convite usado para adicionar o bot contém os escopos `bot` e
+`applications.commands`. Depois, confirme que `DISCORD_CLIENT_ID` é o
+Application ID correto e que `DISCORD_GUILD_ID`, quando preenchido, é o ID
+do servidor correto. Para desenvolvimento, mantenha `DISCORD_GUILD_ID`
+preenchido, porque os comandos de servidor aparecem imediatamente; sem ele,
+a publicação global pode demorar. O bot agora só fica conectado depois que
+o registro dos comandos termina com sucesso e informa no log os nomes
+registrados. Os comandos deste projeto são comandos de barra: escrever
+`/saldo`, `/depositar`, `/historico`, `/sacar` ou `/admin` no campo de mensagem
+é o fluxo esperado; não há comandos prefixados tradicionais.
+
+Para validar localmente se os arquivos dos comandos estão corretos, execute:
+
+```bash
+npm test
+```
+
 Se `PIX_PROVIDER` for `mercadopago` ou `efi`, um servidor HTTP mínimo
 (sem interface) também sobe, só para receber a notificação de pagamento
 — ver [Modos de Pix](#modos-de-pix).

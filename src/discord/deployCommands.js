@@ -24,6 +24,9 @@ async function deployCommands(config) {
   }
 
   const commands = collectCommandsJson();
+  if (commands.length === 0) {
+    throw new Error('Nenhum comando válido foi encontrado para registrar.');
+  }
   const rest = new REST().setToken(config.discord.token);
 
   const route = config.discord.guildId
@@ -31,7 +34,11 @@ async function deployCommands(config) {
     : Routes.applicationCommands(config.discord.clientId);
 
   const data = await rest.put(route, { body: commands });
-  return { count: data.length, scope: config.discord.guildId ? `servidor ${config.discord.guildId}` : 'global' };
+  return {
+    count: data.length,
+    names: data.map((command) => command.name),
+    scope: config.discord.guildId ? `servidor ${config.discord.guildId}` : 'global',
+  };
 }
 
 if (require.main === module) {
