@@ -16,7 +16,11 @@ async function registerCommands(client) {
   const commands = collectCommands();
   try {
     const registered = await client.application.commands.set(commands);
-    console.log(`[discord] ${registered.length} comando(s) registrado(s) globalmente: ${registered.map((command) => command.name).join(', ')}.`);
+    const registeredCount = registered?.size ?? registered?.length ?? commands.length;
+    const registeredNames = registered?.values
+      ? [...registered.values()].map((command) => command.name)
+      : registered.map((command) => command.name);
+    console.log(`[discord] ${registeredCount} comando(s) registrado(s) globalmente: ${registeredNames.join(', ')}.`);
   } catch (err) {
     console.error('[discord] Falha ao registrar comandos globalmente:', err.message);
   }
