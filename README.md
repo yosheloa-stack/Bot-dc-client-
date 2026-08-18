@@ -67,12 +67,6 @@ Ao gerar o link de convite no Discord Developer Portal, marque o escopo
 (mais `Manage Guild` para quem for usar `/admin`, controlado pelo próprio
 Discord).
 
-### Registrar os comandos de barra
-
-```bash
-npm run deploy-commands
-```
-
 ### Rodar o bot + painel
 
 ```bash
@@ -80,7 +74,19 @@ npm start
 ```
 
 O painel administrativo sobe junto, em `http://localhost:3000` (ou a porta
-definida em `PORT`).
+definida em `PORT`). **Os comandos de barra são registrados
+automaticamente toda vez que o bot inicia** — não é preciso rodar nada
+separado, nem na Square Cloud nem em qualquer outro host. Se definir
+`DISCORD_GUILD_ID`, o registro é instantâneo nesse servidor; sem ele, o
+registro é global e o Discord pode levar até 1 hora para propagar os
+comandos em todos os servidores na primeira vez.
+
+Se preferir registrar manualmente (ex: só quer atualizar os comandos sem
+reiniciar o bot), o script standalone continua disponível:
+
+```bash
+npm run deploy-commands
+```
 
 ## Comandos do Discord
 
@@ -241,11 +247,16 @@ SUBDOMAIN=ceifador
    servidor da Square Cloud — envie-o pelo file explorer do dashboard
    para um caminho como `certs/efi.p12` e aponte `EFI_CERT_PATH` para
    esse caminho nas variáveis de ambiente.
-5. Registre os comandos de barra **uma vez, a partir da sua máquina**
-   (não precisa rodar na Square Cloud): `npm run deploy-commands` com o
-   `.env` local preenchido com `DISCORD_TOKEN`/`DISCORD_CLIENT_ID`.
-6. Suba o app pelo dashboard. Com `AUTORESTART=true`, ele reinicia
-   sozinho se cair.
+5. Suba o app pelo dashboard. O bot registra os comandos de barra
+   sozinho a cada início — não precisa rodar nada manualmente. Com
+   `AUTORESTART=true`, ele também reinicia sozinho se cair.
+6. Confira: o bot precisa aparecer **Online** na lista de membros do
+   servidor. Se aparecer offline, o processo não subiu — veja o console
+   da Square Cloud para o erro (geralmente `DISCORD_TOKEN` errado/ausente
+   nas Environment Variables). Se aparecer online mas os comandos não
+   surgirem ao digitar `/`, confira se o bot foi convidado com o escopo
+   `applications.commands` (veja a seção *Convite do bot* acima) — sem
+   ele, o Discord nunca mostra os comandos, mesmo registrados.
 
 > A Square Cloud injeta a variável `PORT` automaticamente quando
 > `SUBDOMAIN` está configurado; o painel já lê `process.env.PORT`

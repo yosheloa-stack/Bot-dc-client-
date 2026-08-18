@@ -11,11 +11,15 @@ function collectCommandsJson() {
   return files.map((file) => require(path.join(commandsDir, file)).data.toJSON());
 }
 
-async function deploy() {
-  const config = getConfig();
+/**
+ * Registra os comandos de barra na API do Discord. Usado tanto pelo script
+ * standalone (`npm run deploy-commands`) quanto automaticamente a cada
+ * inicialização do bot (ver src/index.js), para que subir o processo em
+ * qualquer host já seja suficiente — sem precisar rodar nada à parte.
+ */
+async function deployCommands(config) {
   if (!config.discord.token || !config.discord.clientId) {
-    console.error('[deploy] DISCORD_TOKEN e DISCORD_CLIENT_ID são obrigatórios no .env');
-    process.exit(1);
+    throw new Error('DISCORD_TOKEN e DISCORD_CLIENT_ID são obrigatórios para registrar os comandos.');
   }
 
   const commands = collectCommandsJson();
@@ -25,16 +29,21 @@ async function deploy() {
     ? Routes.applicationGuildCommands(config.discord.clientId, config.discord.guildId)
     : Routes.applicationCommands(config.discord.clientId);
 
-  console.log(
-    `[deploy] Registrando ${commands.length} comando(s) ${
-      config.discord.guildId ? `no servidor ${config.discord.guildId}` : 'globalmente'
-    }...`
-  );
   const data = await rest.put(route, { body: commands });
-  console.log(`[deploy] ${data.length} comando(s) registrado(s) com sucesso.`);
+  return { count: data.length, scope: config.discord.guildId ? `servidor ${config.discord.guildId}` : 'global' };
 }
 
-deploy().catch((err) => {
-  console.error('[deploy] Falha ao registrar comandos:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  const config = getConfig();
+  console.log('[deploy] Registrando comandos de barra...');
+  deployCommands(config)
+    .then(({ count, scope }) => {
+      console.log(`[deploy] ${count} comando(s) registrado(s) com sucesso (${scope}).`);
+    })
+    .catch((err) => {
+      console.error('[deploy] Falha ao registrar comandos:', err.message);
+      process.exit(1);
+    });
+}
+
+module.exports = { deployCommands };
