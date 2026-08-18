@@ -100,11 +100,20 @@ npm run deploy-commands
 | `/admin pix chave\|provedor\|ver` | Configura/consulta a chave e o provedor de Pix. |
 | `/admin saques listar\|concluir\|cancelar` | Gerencia solicitações de retirada pendentes. |
 | `/admin painel` | Mostra o link do painel administrativo. |
-| `/passe enviar id` | Confere o jogador e, após confirmação, envia um Passe Booyah. |
-| `/passe estoque` | Consulta o estoque da API de passe (admin). |
-| `/passe dias` | Consulta a validade da chave da API de passe (admin). |
-| `/admin passe preco valor` | Define o preço unitário do passe. |
+| `/passe enviar id` | *(desativado por padrão, ver nota abaixo)* Confere o jogador e, após confirmação, envia um Passe Booyah. |
+| `/passe estoque` | *(desativado por padrão)* Consulta o estoque da API de passe (admin). |
+| `/passe dias` | *(desativado por padrão)* Consulta a validade da chave da API de passe (admin). |
+| `/admin passe preco valor` | Define o preço unitário do passe (afeta apenas o comando acima, que fica inativo por padrão). |
 | `/admin passe ver` | Mostra o preço e o estado da configuração da venda. |
+
+> **Nota:** `/passe` fica listado em `src/discord/commands/passe.js` mas é
+> excluído do registro automático de comandos (`src/discord/disabledCommands.js`),
+> então ele não aparece no Discord por padrão. A integração chama uma API
+> de terceiros (`fluxggx.squareweb.app`) cujo mecanismo de "estoque" usa
+> usuário/senha de contas de Free Fire de outras pessoas — não é um canal
+> oficial da Garena. Isso não foi removido do repositório a pedido do
+> autor do projeto, mas ativá-lo é uma decisão separada e explícita: para
+> isso, remova `'passe.js'` de `DISABLED_COMMAND_FILES` nesse arquivo.
 
 A integração da API de Passe Booyah usa `PASSE_API_KEY`, uma chave específica gerada no Painel de Passe e diferente da chave da API principal. O comando `/passe enviar id` primeiro consulta o jogador e somente envia o passe após o usuário clicar em **Sim, enviar passe**. Antes do envio, o bot verifica o saldo do cliente, reserva o preço configurado, chama a API e conclui a venda somente quando o retorno confirma o envio. Em caso de falha ou cancelamento, o saldo é estornado. Os comandos `/passe estoque` e `/passe dias` são restritos aos administradores.
 

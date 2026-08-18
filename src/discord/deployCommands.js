@@ -4,10 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { REST, Routes } = require('discord.js');
 const { getConfig } = require('../config/env');
+const { DISABLED_COMMAND_FILES } = require('./disabledCommands');
 
 function collectCommandsJson() {
   const commandsDir = path.join(__dirname, 'commands');
-  const files = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.js'));
+  const files = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.js') && !DISABLED_COMMAND_FILES.has(f));
   return files.map((file) => require(path.join(commandsDir, file)).data.toJSON());
 }
 

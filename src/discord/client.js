@@ -4,11 +4,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const notifier = require('./notifier');
+const { DISABLED_COMMAND_FILES } = require('./disabledCommands');
 
 function loadCommands() {
   const commands = new Collection();
   const commandsDir = path.join(__dirname, 'commands');
-  const files = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.js'));
+  const files = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.js') && !DISABLED_COMMAND_FILES.has(f));
   for (const file of files) {
     const command = require(path.join(commandsDir, file));
     if (command?.data?.name) {
