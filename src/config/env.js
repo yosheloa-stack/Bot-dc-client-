@@ -20,6 +20,7 @@ function getConfig() {
       guildId: process.env.DISCORD_GUILD_ID || '',
       adminRoleId: db.admin_role_id || process.env.ADMIN_ROLE_ID || '',
       logChannelId: db.log_channel_id || process.env.ADMIN_LOG_CHANNEL_ID || '',
+      ownerId: process.env.OWNER_ID || '',
     },
     web: {
       enabled: bool(process.env.WEB_PANEL_ENABLED, true),

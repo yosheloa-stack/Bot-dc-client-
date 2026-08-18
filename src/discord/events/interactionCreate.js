@@ -5,6 +5,8 @@ const { baseEmbed, logoAttachment, EMOJI, COLORS } = require('../embeds/theme');
 const passeService = require('../../services/passeService');
 const balanceService = require('../../services/balanceService');
 const { getConfig } = require('../../config/env');
+const { handleButton: handleMusicButton } = require('../../music/panelHandler');
+const menu = require('../panel/menu');
 
 async function handlePasseButton(interaction) {
   const [action, ownerId, id] = interaction.customId.split(':');
@@ -65,6 +67,15 @@ module.exports = {
   async execute(interaction) {
     if (interaction.isButton() && interaction.customId.startsWith('passe_')) {
       return handlePasseButton(interaction);
+    }
+    if (interaction.isButton() && interaction.customId.startsWith('music:')) {
+      return handleMusicButton(interaction);
+    }
+    if (interaction.isButton() && interaction.customId.startsWith(menu.PREFIX)) {
+      return menu.handleButton(interaction, interaction.client);
+    }
+    if (interaction.isModalSubmit() && interaction.customId.startsWith(menu.PREFIX)) {
+      return menu.handleModal(interaction, interaction.client);
     }
     if (!interaction.isChatInputCommand()) return;
 

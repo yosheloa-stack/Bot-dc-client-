@@ -2,7 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 const notifier = require('./notifier');
 const { DISABLED_COMMAND_FILES } = require('./disabledCommands');
 
@@ -33,7 +33,16 @@ function loadEvents(client) {
 }
 
 function createClient() {
-  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildVoiceStates,
+    ],
+    partials: [Partials.Channel, Partials.Message],
+  });
   client.commands = loadCommands();
   loadEvents(client);
   notifier.setClient(client);
