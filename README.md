@@ -68,12 +68,13 @@ barra, sem ler conteúdo de mensagem nem lista de membros.
 ### Convite do bot
 
 Ao gerar o link de convite no Discord Developer Portal (OAuth2 → URL
-Generator), marque os escopos `bot` e `applications.commands`, e
-conceda as permissões `Send Messages`, `Embed Links`, `Attach Files` e
-`Use Slash Commands` (mais `Manage Guild` para quem for usar `/admin`,
-controlado pelo próprio Discord). **Os dois escopos são obrigatórios**:
-sem `applications.commands`, os comandos nunca aparecem no servidor,
-mesmo com o bot online.
+Generator), use o escopo `bot` e conceda as permissões `Send Messages`,
+`Embed Links`, `Attach Files` e `Use Slash Commands` (mais `Manage Guild`
+para quem for usar `/admin`, controlado pelo próprio Discord). Nas
+configurações atuais do Discord, a autorização de comandos de aplicação é
+incluída por padrão na instalação de um bot; se o bot foi adicionado por um
+convite antigo e os comandos não aparecem, gere o convite novamente com as
+configurações de instalação atualizadas.
 
 ### Rodar o bot
 
@@ -90,13 +91,13 @@ na primeira vez.
 
 ### Quando o bot está online, mas os comandos não aparecem
 
-Confira se o convite usado para adicionar o bot contém os escopos `bot` e
-`applications.commands`. Depois, confirme que `DISCORD_CLIENT_ID` é o
-Application ID correto e que `DISCORD_GUILD_ID`, quando preenchido, é o ID
-do servidor correto. Para desenvolvimento, mantenha `DISCORD_GUILD_ID`
-preenchido, porque os comandos de servidor aparecem imediatamente; sem ele,
-a publicação global pode demorar. O bot agora só fica conectado depois que
-o registro dos comandos termina com sucesso e informa no log os nomes
+Confirme que `DISCORD_CLIENT_ID` é o Application ID correto e que
+`DISCORD_GUILD_ID`, quando preenchido, é o ID do servidor correto. Para
+desenvolvimento, mantenha `DISCORD_GUILD_ID` preenchido, porque os comandos
+de servidor aparecem imediatamente; sem ele, a publicação global pode
+demorar. Se o bot foi instalado antes da configuração atual do Discord,
+refaça o convite pelo Developer Portal. O bot agora só fica conectado depois
+que o registro dos comandos termina com sucesso e informa no log os nomes
 registrados. Os comandos deste projeto são comandos de barra: escrever
 `/saldo`, `/depositar`, `/historico`, `/sacar` ou `/admin` no campo de mensagem
 é o fluxo esperado; não há comandos prefixados tradicionais.
