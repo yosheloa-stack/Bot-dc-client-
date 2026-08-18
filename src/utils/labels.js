@@ -5,6 +5,7 @@ const TYPE_LABELS = {
   withdraw: 'Retirada',
   admin_credit: 'Ajuste (crédito)',
   admin_debit: 'Ajuste (débito)',
+  passe: 'Venda de passe',
 };
 
 const STATUS_LABELS = {

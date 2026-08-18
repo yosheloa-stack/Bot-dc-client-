@@ -29,6 +29,11 @@ function getConfig() {
       adminPassword: process.env.ADMIN_PANEL_PASSWORD || 'mude-esta-senha',
       sessionSecret: process.env.SESSION_SECRET || 'mude-este-segredo-agora',
     },
+    passe: {
+      apiKey: process.env.PASSE_API_KEY || '',
+      baseUrl: (process.env.PASSE_API_BASE_URL || 'https://fluxggx.squareweb.app').replace(/\/$/, ''),
+      priceCents: Number(db.passe_price_cents || 0),
+    },
     pix: {
       provider: db.pix_provider || process.env.PIX_PROVIDER || 'manual',
       key: db.pix_key || process.env.PIX_KEY || '',

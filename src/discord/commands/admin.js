@@ -72,6 +72,18 @@ module.exports = {
     )
     .addSubcommandGroup((group) =>
       group
+        .setName('passe')
+        .setDescription('Configurações da venda de passe')
+        .addSubcommand((sub) =>
+          sub
+            .setName('preco')
+            .setDescription('Define o preço unitário do Passe Booyah')
+            .addNumberOption((o) => o.setName('valor').setDescription('Preço em reais').setRequired(true).setMinValue(0.01))
+        )
+        .addSubcommand((sub) => sub.setName('ver').setDescription('Mostra a configuração da venda de passe'))
+    )
+    .addSubcommandGroup((group) =>
+      group
         .setName('saques')
         .setDescription('Gerenciar solicitações de retirada')
         .addSubcommand((sub) => sub.setName('listar').setDescription('Lista retiradas pendentes'))
@@ -114,6 +126,9 @@ module.exports = {
     }
     if (group === 'pix') {
       return handlePix(interaction, sub, config);
+    }
+    if (group === 'passe') {
+      return handlePasse(interaction, sub);
     }
     if (group === 'saques') {
       return handleSaques(interaction, sub);
@@ -190,6 +205,26 @@ async function handlePix(interaction, sub, config) {
       );
     return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
   }
+}
+
+async function handlePasse(interaction, sub) {
+  if (sub === 'preco') {
+    const amountCents = reaisToCents(interaction.options.getNumber('valor', true));
+    settingsRepository.set('passe_price_cents', String(amountCents));
+    const embed = baseEmbed({ color: COLORS.success })
+      .setTitle(`${EMOJI.check} Preço do passe atualizado`)
+      .setDescription(`Cada Passe Booyah será vendido por **${centsToBRL(amountCents)}**.`);
+    return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
+  }
+
+  const config = getConfig();
+  const embed = baseEmbed()
+    .setTitle('Configuração da venda de passe')
+    .addFields(
+      { name: 'Preço atual', value: config.passe.priceCents > 0 ? centsToBRL(config.passe.priceCents) : 'Não configurado', inline: true },
+      { name: 'API', value: config.passe.apiKey ? 'Chave configurada' : 'Chave não configurada', inline: true }
+    );
+  return interaction.reply({ embeds: [embed], files: [logoAttachment()], ephemeral: true });
 }
 
 async function handleSaques(interaction, sub) {

@@ -100,6 +100,17 @@ npm run deploy-commands
 | `/admin pix chave\|provedor\|ver` | Configura/consulta a chave e o provedor de Pix. |
 | `/admin saques listar\|concluir\|cancelar` | Gerencia solicitações de retirada pendentes. |
 | `/admin painel` | Mostra o link do painel administrativo. |
+| `/passe enviar id` | Confere o jogador e, após confirmação, envia um Passe Booyah. |
+| `/passe estoque` | Consulta o estoque da API de passe (admin). |
+| `/passe dias` | Consulta a validade da chave da API de passe (admin). |
+| `/admin passe preco valor` | Define o preço unitário do passe. |
+| `/admin passe ver` | Mostra o preço e o estado da configuração da venda. |
+
+A integração da API de Passe Booyah usa `PASSE_API_KEY`, uma chave específica gerada no Painel de Passe e diferente da chave da API principal. O comando `/passe enviar id` primeiro consulta o jogador e somente envia o passe após o usuário clicar em **Sim, enviar passe**. Antes do envio, o bot verifica o saldo do cliente, reserva o preço configurado, chama a API e conclui a venda somente quando o retorno confirma o envio. Em caso de falha ou cancelamento, o saldo é estornado. Os comandos `/passe estoque` e `/passe dias` são restritos aos administradores.
+
+O dono configura o preço diretamente pelo Discord usando `/admin passe preco valor`, por exemplo `/admin passe preco valor:15`. O valor é salvo no banco SQLite e aplicado imediatamente, sem reiniciar o bot. `/admin passe ver` mostra o preço atual e se a chave da API está configurada.
+
+Configure `PASSE_API_KEY` e, opcionalmente, `PASSE_API_BASE_URL=https://fluxggx.squareweb.app` nas variáveis de ambiente da hospedagem. Nunca coloque a chave real no código, no `.env.example`, em commits ou em mensagens públicas. Se a chave tiver sido compartilhada com terceiros, gere uma nova no Painel de Passe.
 
 `/admin` fica visível por padrão apenas para quem tem a permissão
 `Gerenciar Servidor`. Para liberar também para um cargo específico de
