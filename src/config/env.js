@@ -27,7 +27,6 @@ function getConfig() {
     passe: {
       apiKey: process.env.PASSE_API_KEY || '',
       baseUrl: (process.env.PASSE_API_BASE_URL || 'https://fluxggx.squareweb.app').replace(/\/$/, ''),
-      region: (process.env.PASSE_API_REGION || 'BR').trim().toUpperCase(),
       priceCents: Number(db.passe_price_cents || 0),
     },
     pix: {
