@@ -53,7 +53,9 @@ Preencha o `.env`:
 
 1. `DISCORD_TOKEN` — em Discord Developer Portal → Bot → Token.
 2. `PIX_KEY` — sua chave Pix, usada no modo manual.
-3. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
+3. `PASSE_API_KEY` e `PASSE_API_BASE_URL` — se for usar o comando `/passe`
+   com a KasaAPI.
+4. `MP_ACCESS_TOKEN` ou `EFI_CLIENT_ID`/`EFI_CLIENT_SECRET`/`EFI_CERT_PATH`
    — apenas se for usar Pix automático (ver [Modos de Pix](#modos-de-pix)).
 
 ### Intents privilegiadas
@@ -116,33 +118,32 @@ Se `PIX_PROVIDER` for `mercadopago` ou `efi`, um servidor HTTP mínimo
 | `/admin pix chave\|provedor\|ver\|webhook` | Configura/consulta a chave e o provedor de Pix; registra o webhook na Efí. |
 | `/admin depositos listar\|confirmar\|falhou\|consultar` | Gerencia depósitos pendentes (essencial no modo manual). |
 | `/admin saques listar\|concluir\|cancelar` | Gerencia solicitações de retirada pendentes. |
-| `/passe enviar id` | *(desativado por padrão, ver nota abaixo)* Confere o jogador e, após confirmação, envia um Passe Booyah. |
-| `/passe estoque` | *(desativado por padrão)* Consulta o estoque da API de passe (admin). |
-| `/passe dias` | *(desativado por padrão)* Consulta a validade da chave da API de passe (admin). |
-| `/admin passe preco valor` | Define o preço unitário do passe (afeta apenas o comando acima, que fica inativo por padrão). |
+| `/passe enviar id` | Confere o jogador e, após confirmação, envia um Passe Booyah pela KasaAPI. |
+| `/passe estoque` | Consulta o estoque da KasaAPI (admin). |
+| `/passe dias` | Consulta a validade da key da KasaAPI (admin). |
+| `/admin passe preco valor` | Define o preço unitário do passe. |
 | `/admin passe ver` | Mostra o preço e o estado da configuração da venda. |
 
-> **Nota:** `/passe` fica listado em `src/discord/commands/passe.js` mas é
-> excluído do registro automático de comandos (`src/discord/disabledCommands.js`),
-> então ele não aparece no Discord por padrão. A integração chama uma API
-> de terceiros (`fluxggx.squareweb.app`) cujo mecanismo de "estoque" usa
-> usuário/senha de contas de Free Fire de outras pessoas — não é um canal
-> oficial da Garena. Isso não foi removido do repositório a pedido do
-> autor do projeto, mas ativá-lo é uma decisão separada e explícita: para
-> isso, remova `'passe.js'` de `DISABLED_COMMAND_FILES` nesse arquivo.
+A integração do Passe Booyah usa a **KasaAPI** do repositório
+[`yosheloa-stack/kasane-api-likes-Yosh`](https://github.com/yosheloa-stack/kasane-api-likes-Yosh).
+Configure `PASSE_API_KEY` com uma key de cliente da KasaAPI e
+`PASSE_API_BASE_URL` com a URL pública onde ela está publicada. O comando
+`/passe enviar id` chama `/passe/confirmar` para mostrar o jogador e somente
+chama `/send-passe` depois que o usuário clica em **Sim, enviar passe**.
+Antes do envio, o bot verifica o saldo, reserva o preço configurado e só
+conclui a venda quando a KasaAPI retorna `sucesso: true` e `status: 1`. Em
+caso de falha ou cancelamento, o saldo é estornado. Os comandos
+`/passe estoque` e `/passe dias` são restritos aos administradores. O preço
+é definido com `/admin passe preco valor` (ex: `/admin passe preco valor:15`),
+salvo no SQLite e aplicado imediatamente. A integração é habilitada no
+registro automático dos comandos, mas só funciona depois que a key e a URL
+da KasaAPI forem configuradas.
 
-A integração da API de Passe Booyah usa `PASSE_API_KEY`, uma chave
-específica gerada no Painel de Passe (do operador da API, não do
-Ceifador) e diferente da chave da API principal. O comando `/passe
-enviar id` primeiro consulta o jogador e somente envia o passe após o
-usuário clicar em **Sim, enviar passe**. Antes do envio, o bot verifica
-o saldo do cliente, reserva o preço configurado, chama a API e conclui a
-venda somente quando o retorno confirma o envio. Em caso de falha ou
-cancelamento, o saldo é estornado. Os comandos `/passe estoque` e
-`/passe dias` são restritos aos administradores. O preço é definido com
-`/admin passe preco valor` (ex: `/admin passe preco valor:15`), salvo no
-SQLite e aplicado imediatamente. Configure `PASSE_API_KEY` só por
-variável de ambiente — nunca no código, no `.env.example` ou em commits.
+A KasaAPI precisa estar em execução e acessível pelo bot. No repositório da
+KasaAPI, use `npm install`, configure `LIKES_API_PORT`/`PORT` e as credenciais
+do serviço, e inicie com `npm start`. Para a API receber chamadas externas,
+publique-a em uma URL HTTPS e use essa URL em `PASSE_API_BASE_URL`. Não
+versione keys, senhas ou credenciais do serviço.
 
 `/admin` fica visível por padrão apenas para quem tem a permissão
 `Gerenciar Servidor`. Para liberar também para um cargo específico de
